@@ -16,7 +16,7 @@ function outputArgs(config){
   const urls=ds.map(d=>`${String(d.rtmpUrl).replace(/\/$/,'')}/${d.streamKey}`);
   if(urls.length===1)return ['-f','flv',urls[0]];
   const esc=v=>String(v).replace(/\\/g,'\\\\').replace(/\|/g,'\\|').replace(/:/g,'\\:');
-  return ['-f','tee',urls.map(u=>`[f=flv:onfail=ignore]${esc(u)}`).join('|')];
+  return ['-f','tee',ds.map((d,i)=>`[f=flv:onfail=${(d.role==='PRIMARY'||i===0)?'abort':'ignore'}]${esc(urls[i])}`).join('|')];
 }
 
 export class FfmpegRunner {

@@ -8,7 +8,7 @@ export function validateUpdateManifest(m={}){
   const version=String(m.version||'').trim(),url=String(m.url||'').trim(),sha256=String(m.sha256||'').trim().toLowerCase();
   if(!/^\d+\.\d+\.\d+(?:[-+][\w.-]+)?$/.test(version))throw new Error('Invalid update version.');
   let parsed;try{parsed=new URL(url);}catch{throw new Error('Invalid update URL.');}
-  if(!['https:','http:'].includes(parsed.protocol))throw new Error('Update URL must use HTTP(S).');
+  if(parsed.protocol!=='https:'&&!(['localhost','127.0.0.1','::1'].includes(parsed.hostname)&&parsed.protocol==='http:'))throw new Error('Update URL must use HTTPS (HTTP is allowed only for localhost).');
   if(!/^[a-f0-9]{64}$/.test(sha256))throw new Error('Update manifest requires a SHA-256 checksum.');
   return {version,url,sha256,notes:String(m.notes||'').slice(0,4000),publishedAt:m.publishedAt||null};
 }

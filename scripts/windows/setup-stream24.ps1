@@ -26,12 +26,14 @@ if($Mode -in @('Server','Both')){
     $key=(node scripts\generate-master-key.mjs | Select-Object -Last 1).Trim()
     if(-not $key){$bytes=New-Object byte[] 32;[Security.Cryptography.RandomNumberGenerator]::Fill($bytes);$key=[Convert]::ToHexString($bytes).ToLower()}
     "`$env:APP_MASTER_KEY='$key'`r`n`$env:HOST='0.0.0.0'`r`n`$env:PORT='3000'" | Set-Content -Encoding UTF8 $envPath
+    try { icacls $envPath /inheritance:r /grant:r "$env:USERNAME:(R,W)" | Out-Null } catch { Write-Warning "Could not tighten ACL on $envPath: $($_.Exception.Message)" }
   }
 }
 if($Mode -in @('Worker','Both')){
   if(-not $AgentToken){Write-Warning 'No worker token supplied. Create a worker in the dashboard and rerun with -AgentToken, or edit apps\agent\config.json.'}
   $cfg=[ordered]@{serverUrl=$ServerUrl;agentToken=$AgentToken;ffmpegPath='ffmpeg';ffprobePath='ffprobe';autoRestart=$true;restartDelayMs=5000;recoverOnStart=$true;watchFolders=$WatchFolders;watchScanIntervalMs=60000}
   $cfg | ConvertTo-Json -Depth 5 | Set-Content -Encoding UTF8 'apps\agent\config.json'
+  try { icacls (Join-Path $InstallDir 'apps\agent\config.json') /inheritance:r /grant:r "$env:USERNAME:(R,W)" | Out-Null } catch { Write-Warning "Could not tighten ACL on agent config: $($_.Exception.Message)" }
 }
 if(-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)){Write-Warning 'FFmpeg is not on PATH. Run scripts\windows\install-ffmpeg.ps1 before streaming.'}
 if($InstallStartupTasks){

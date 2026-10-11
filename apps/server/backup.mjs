@@ -16,5 +16,10 @@ export function openEncryptedBackup(bundle,key){
   const parsed=JSON.parse(plain.toString('utf8'));if(parsed.magic!==MAGIC||!parsed.data)throw new Error('Invalid Stream24 backup payload.');return parsed;
 }
 export function sanitizeRestoredDb(data,knownKeys){
-  const out={};for(const key of knownKeys)out[key]=Array.isArray(data?.[key])?data[key]:[];return out;
+  const out={};for(const key of knownKeys)out[key]=Array.isArray(data?.[key])?data[key]:[];
+  // Transient authorization/command state must never be replayed from a backup.
+  if(knownKeys.includes('sessions'))out.sessions=[];if(knownKeys.includes('commands'))out.commands=[];if(knownKeys.includes('youtubeOauthStates'))out.youtubeOauthStates=[];
+  for(const s of out.streams||[]){s.desiredRunning=false;s.status='STOPPED';s.leaseId=null;s.activeDeviceId=s.deviceId||null;s.runtime={...(s.runtime||{}),state:'IDLE',updatedAt:null};}
+  return out;
 }
+
