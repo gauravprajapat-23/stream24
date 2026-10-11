@@ -1,0 +1,2 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {analyticsSummary} from '../apps/server/analytics.mjs';
+test('analytics summary estimates live bytes',()=>{const r=analyticsSummary([{id:'s1',name:'A',videoBitrateKbps:4000,audioBitrateKbps:128,analytics:{totalLiveSeconds:10,starts:2,reconnects:1,failures:0}}]);assert.equal(r.totalLiveSeconds,10);assert.equal(r.starts,2);assert.equal(r.reconnects,1);assert.equal(r.estimatedBytes,5160000);});

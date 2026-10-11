@@ -1,0 +1,17 @@
+.env
+*.log
+data/db.json
+apps/agent/config.json
+.DS_Store
+Thumbs.db
+
+apps/agent/logs/
+
+# Local/runtime secrets and generated state
+*.local
+*.secret
+*.secrets
+*.bak
+*.tmp
+stream24-backup-*.json
+apps/server/data/

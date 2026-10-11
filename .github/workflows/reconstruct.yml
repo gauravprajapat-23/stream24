@@ -1,0 +1,41 @@
+name: Reconstruct Stream24 source
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  reconstruct:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reconstruct oversized source files
+        shell: bash
+        run: |
+          if [ ! -f .upload/app.js.gz.b64 ] || [ ! -f .upload/server.mjs.gz.b64 ]; then
+            echo "No reconstruction payloads found."
+            exit 0
+          fi
+          mkdir -p apps/server/public apps/server
+          base64 -d .upload/app.js.gz.b64 | gzip -d > apps/server/public/app.js
+          base64 -d .upload/server.mjs.gz.b64 | gzip -d > apps/server/server.mjs
+          rm -rf .upload
+      - name: Commit reconstructed source
+        shell: bash
+        run: |
+          if [ ! -f apps/server/server.mjs ] || [ ! -f apps/server/public/app.js ]; then
+            echo "Nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes."
+            exit 0
+          fi
+          git commit -m "chore: reconstruct oversized source files"
+          git push

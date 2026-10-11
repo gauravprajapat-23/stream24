@@ -1,0 +1,13 @@
+{
+  "serverUrl": "http://localhost:3000",
+  "agentToken": "PASTE_WORKER_TOKEN_HERE",
+  "ffmpegPath": "ffmpeg",
+  "ffprobePath": "ffprobe",
+  "autoRestart": true,
+  "restartDelayMs": 5000,
+  "recoverOnStart": true,
+  "watchFolders": [
+    "D:\\Stream24\\media"
+  ],
+  "watchScanIntervalMs": 60000
+}
