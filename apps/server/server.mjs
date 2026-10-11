@@ -13,7 +13,7 @@ import { normalizeProgramming, activeProgrammingBlock, programmingCalendar } fro
 import { youtubeConfigured, youtubeConfig, makeOauthState, authUrl, exchangeCode, storeConnection, accessToken, getChannel, listBroadcasts, updateBroadcast, provisionYoutubeLive } from './youtube.mjs';
 import { deviceOnline, normalizeWorkerFailover, chooseTakeoverWorker, newLease } from './failover.mjs';
 import { normalizeMediaMappings, mapPathForDevice, mapPlaylist, syncPairForDevice, canonicalPathForDevice } from './pathmap.mjs';
-import { backupHealth, cleanupCandidates, replicaState, streamRequiredAssets } from './retention.mjs';
+import { backupHealth, cleanupCandidates, replicaState, streamRequiredAssets, refreshRetentionState } from './retention.mjs';
 import { agentTokenHash, isSameOrigin, RateLimiter, requestIp, securityHeaders, timingSafeHexEqual } from './hardening.mjs';
 import { createEncryptedBackup, openEncryptedBackup, sanitizeRestoredDb } from './backup.mjs';
 import { setupChecklist, checklistProgress } from './setup.mjs';
@@ -83,6 +83,7 @@ function reconciliationForOwner(ownerId){
 function hasPendingRepair(streamId,deviceId){return store.data.replicationJobs.some(j=>j.streamId===streamId&&j.deviceId===deviceId&&['QUEUED','COPYING'].includes(j.status));}
 function reconciliationTick(){
   let dirty=false;
+  for(const ownerId of [...new Set(store.data.users.map(u=>u.id))])if(refreshRetentionState({ownerId,catalog:store.data.mediaCatalog,streams:store.data.streams,templates:store.data.templates}))dirty=true;
   for(const st of store.data.streams.filter(x=>x.workerFailover?.enabled)){for(const deviceId of st.workerFailover.backupDeviceIds||[]){if(deviceId===activeDevice(st)||hasPendingRepair(st.id,deviceId))continue;const rep=replicaState({stream:st,deviceId,catalog:store.data.mediaCatalog});const repair=[...rep.missing,...rep.stale];if(!repair.length)continue;const set=new Set(repair.map(x=>String(x).toLowerCase()));const ids=queueReplicationForStream(st,{onlyPaths:set,reason:'AUTO_REPAIR'});if(ids.length){event('BACKUP_REPAIR_QUEUED',{streamId:st.id,deviceId,count:repair.length,commands:ids},st.ownerId);dirty=true;}}}
   if(dirty)store.persist();
 }
