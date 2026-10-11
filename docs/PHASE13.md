@@ -9,7 +9,7 @@ Phase 13 hardens the local Stream24 control plane without introducing any paid c
 - Browser mutation requests are restricted to same-origin requests.
 - Login/setup endpoints have in-memory rate limiting.
 - Security response headers include CSP, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, and `Permissions-Policy`.
-- Session cookies remain HttpOnly + SameSite=Strict; set `STREAM24_HTTPS=1` only when the control plane is actually behind HTTPS so the Secure cookie flag is enabled.
+- Session cookies remain HttpOnly + SameSite=Strict. When `STREAM24_TLS_CERT_PATH` and `STREAM24_TLS_KEY_PATH` are configured, Stream24 serves native HTTPS and automatically enables Secure cookies/HSTS.
 - The dashboard warns when `APP_MASTER_KEY` is not explicitly configured.
 
 ## Encrypted backup
