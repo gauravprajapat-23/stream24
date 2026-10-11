@@ -4,6 +4,8 @@ param(
   [string]$ServerUrl='http://localhost:3000',
   [string]$AgentToken='',
   [switch]$AllowInsecureLan,
+  [switch]$EnableLanTls,
+  [string]$CaCertPath='',
   [string[]]$WatchFolders=@("$env:USERPROFILE\Videos\Stream24"),
   [switch]$InstallStartupTasks
 )
@@ -30,9 +32,21 @@ if($Mode -in @('Server','Both')){
     try { icacls $envPath /inheritance:r /grant:r "$env:USERNAME:(R,W)" | Out-Null } catch { Write-Warning "Could not tighten ACL on $envPath: $($_.Exception.Message)" }
   }
 }
+$localCa=''
+if($EnableLanTls -and $Mode -in @('Server','Both')){
+  $tls=& "$InstallDir\scripts\windows\generate-lan-tls.ps1" -InstallDir $InstallDir
+  $envPath=Join-Path $InstallDir 'data\stream24.env.ps1'
+  $existing=@(Get-Content $envPath -ErrorAction SilentlyContinue | Where-Object {$_ -notmatch '^\$env:STREAM24_TLS_(CERT|KEY)_PATH='})
+  $existing += "`$env:STREAM24_TLS_CERT_PATH='$($tls.CertPath)'"
+  $existing += "`$env:STREAM24_TLS_KEY_PATH='$($tls.KeyPath)'"
+  $existing | Set-Content -Encoding UTF8 $envPath
+  $localCa=$tls.CaCertPath
+  if($ServerUrl -eq 'http://localhost:3000'){$ServerUrl='https://localhost:3000'}
+}
 if($Mode -in @('Worker','Both')){
   if(-not $AgentToken){Write-Warning 'No worker token supplied. Create a worker in the dashboard and rerun with -AgentToken, or edit apps\agent\config.json.'}
-  $cfg=[ordered]@{serverUrl=$ServerUrl;agentToken=$AgentToken;ffmpegPath='ffmpeg';ffprobePath='ffprobe';autoRestart=$true;restartDelayMs=5000;recoverOnStart=$true;watchFolders=$WatchFolders;watchScanIntervalMs=60000;allowInsecureLan=[bool]$AllowInsecureLan}
+  if(-not $CaCertPath -and $localCa){$CaCertPath=$localCa}
+  $cfg=[ordered]@{serverUrl=$ServerUrl;agentToken=$AgentToken;ffmpegPath='ffmpeg';ffprobePath='ffprobe';autoRestart=$true;restartDelayMs=5000;recoverOnStart=$true;watchFolders=$WatchFolders;watchScanIntervalMs=60000;allowInsecureLan=[bool]$AllowInsecureLan;caCertPath=$CaCertPath}
   $cfg | ConvertTo-Json -Depth 5 | Set-Content -Encoding UTF8 'apps\agent\config.json'
   try { icacls (Join-Path $InstallDir 'apps\agent\config.json') /inheritance:r /grant:r "$env:USERNAME:(R,W)" | Out-Null } catch { Write-Warning "Could not tighten ACL on agent config: $($_.Exception.Message)" }
 }
