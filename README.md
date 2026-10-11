@@ -185,3 +185,10 @@ powershell -ExecutionPolicy Bypass -File .\scripts\windows\setup-stream24.ps1 -M
 ```
 
 This copies Stream24 to `%LOCALAPPDATA%\Stream24`, generates a production master key if needed, writes worker configuration, and can install resilient Task Scheduler startup jobs. See `docs/PHASE14.md`.
+
+
+## LAN transport security
+
+For workers on another PC, Stream24 now refuses plain `http://` LAN control URLs by default because worker tokens and RTMP credentials would otherwise travel in plaintext. Prefer native HTTPS by setting `STREAM24_TLS_CERT_PATH` and `STREAM24_TLS_KEY_PATH` to PEM certificate/key files on the server, then use an `https://...` worker URL. If you intentionally accept plaintext on a trusted LAN, set `allowInsecureLan: true` in that worker's `config.json` (or pass `-AllowInsecureLan` to the Windows setup script).
+
+First-run owner creation is restricted to the server PC by default. `STREAM24_ALLOW_REMOTE_SETUP=1` is an explicit escape hatch and should normally remain disabled.
