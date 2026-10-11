@@ -1,4 +1,6 @@
 import fs from 'node:fs';
+import http from 'node:http';
+import https from 'node:https';
 import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -24,7 +26,12 @@ function log(message,level='INFO'){
   pendingLogs.push({level,message:String(message).slice(0,3000),streamId:runner?.streamId||desiredStream?.streamId||null,createdAt:new Date().toISOString()});
   if(pendingLogs.length>100)pendingLogs=pendingLogs.slice(-100);
 }
-async function request(url,options={}){const res=await fetch(`${api}${url}`,{...options,signal:options.signal||AbortSignal.timeout(15000),headers:{authorization:`Bearer ${token}`,'content-type':'application/json',...(options.headers||{})}});const body=await res.json().catch(()=>({}));if(!res.ok)throw new Error(body.error||`HTTP ${res.status}`);return body;}
+async function request(url,options={}){
+  const target=new URL(`${api}${url}`),method=options.method||'GET',payload=options.body==null?null:Buffer.from(String(options.body));
+  const headers={authorization:`Bearer ${token}`,'content-type':'application/json',...(options.headers||{})};if(payload)headers['content-length']=String(payload.length);
+  const transport=target.protocol==='https:'?https:http,caPath=String(config.caCertPath||'').trim();
+  return await new Promise((resolve,reject)=>{const req=transport.request(target,{method,headers,...(target.protocol==='https:'&&caPath?{ca:fs.readFileSync(path.resolve(caPath)),rejectUnauthorized:true}:{})},res=>{const chunks=[];let total=0;res.on('data',c=>{total+=c.length;if(total>16*1024*1024){req.destroy(new Error('Control response too large.'));return;}chunks.push(c);});res.on('end',()=>{let body={};try{body=chunks.length?JSON.parse(Buffer.concat(chunks).toString('utf8')):{};}catch{}if((res.statusCode||500)>=400)return reject(new Error(body.error||`HTTP ${res.statusCode}`));resolve(body);});});req.setTimeout(15000,()=>req.destroy(new Error('Control request timed out.')));req.on('error',reject);if(payload)req.write(payload);req.end();});
+}
 async function flushLogs(){if(!pendingLogs.length)return;const batch=pendingLogs.splice(0,30);try{await request('/api/agent/logs',{method:'POST',body:JSON.stringify({logs:batch})});}catch{pendingLogs.unshift(...batch);if(pendingLogs.length>100)pendingLogs=pendingLogs.slice(-100);}}
 async function reportRuntime(extra={}){try{await request('/api/agent/runtime',{method:'POST',body:JSON.stringify({streamId:runner.streamId||desiredStream?.streamId||null,currentIndex:runner.currentIndex,leaseId:desiredStream?.leaseId||null,assignmentEpoch:Number(desiredStream?.assignmentEpoch||0),...extra})});}catch{}}
 async function stopForLeaseLoss(reason){if(!desiredStream)return;const id=desiredStream.streamId;log(`Lease lost for ${id}: ${reason}. Stopping local FFmpeg to prevent duplicate publishing.`,'ERROR');desiredStream=null;clearTimeout(reconnectTimer);reconnectAttempts=0;try{await runner.stop();}catch{};}
