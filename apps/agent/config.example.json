@@ -9,5 +9,6 @@
   "watchFolders": [
     "D:\\Stream24\\media"
   ],
-  "watchScanIntervalMs": 60000
+  "watchScanIntervalMs": 60000,
+  "allowInsecureLan": false
 }
