@@ -33,7 +33,12 @@ export function backupHealth({stream,device,catalog=[],nowMs=Date.now()}){
   if(rep.total){score+=Math.round(40*(rep.verified/rep.total));if(!rep.ready)reasons.push(`${rep.total-rep.verified}/${rep.total} media not verified`);}else reasons.push('no playlist media');
   return {score:Math.max(0,Math.min(100,score)),ready:score>=80&&rep.ready&&online,online,catalogFresh:fresh,storageFreeBytes:free,storageReserveBytes:reserve,replica:rep,reasons};
 }
+export function refreshRetentionState({ownerId,catalog=[],streams=[],templates=[],nowMs=Date.now()}){
+  const refs=referencedPaths(streams.filter(s=>s.ownerId===ownerId),templates.filter(t=>t.ownerId===ownerId));let changed=false;const stamp=new Date(nowMs).toISOString();
+  for(const row of catalog.filter(x=>x.ownerId===ownerId)){const referenced=refs.has(norm(row.canonicalPath));if(referenced){if(row.unreferencedSince){delete row.unreferencedSince;changed=true;}}else if(!row.unreferencedSince){row.unreferencedSince=stamp;changed=true;}}
+  return changed;
+}
 export function cleanupCandidates({ownerId,catalog=[],streams=[],templates=[],retentionDays=7,nowMs=Date.now()}){
   const refs=referencedPaths(streams.filter(s=>s.ownerId===ownerId),templates.filter(t=>t.ownerId===ownerId)),cutoff=nowMs-Math.max(1,Number(retentionDays||7))*86400000;
-  return catalog.filter(x=>x.ownerId===ownerId).filter(x=>!refs.has(norm(x.canonicalPath))).filter(x=>Date.parse(x.updatedAt||x.createdAt||0)<cutoff).map(x=>({...x,reason:'UNREFERENCED_RETENTION'}));
+  return catalog.filter(x=>x.ownerId===ownerId).filter(x=>!refs.has(norm(x.canonicalPath))).filter(x=>x.unreferencedSince&&Date.parse(x.unreferencedSince)<cutoff).map(x=>({...x,reason:'UNREFERENCED_RETENTION'}));
 }
