@@ -3,6 +3,7 @@ param(
   [string]$InstallDir="$env:LOCALAPPDATA\Stream24",
   [string]$ServerUrl='http://localhost:3000',
   [string]$AgentToken='',
+  [switch]$AllowInsecureLan,
   [string[]]$WatchFolders=@("$env:USERPROFILE\Videos\Stream24"),
   [switch]$InstallStartupTasks
 )
@@ -31,7 +32,7 @@ if($Mode -in @('Server','Both')){
 }
 if($Mode -in @('Worker','Both')){
   if(-not $AgentToken){Write-Warning 'No worker token supplied. Create a worker in the dashboard and rerun with -AgentToken, or edit apps\agent\config.json.'}
-  $cfg=[ordered]@{serverUrl=$ServerUrl;agentToken=$AgentToken;ffmpegPath='ffmpeg';ffprobePath='ffprobe';autoRestart=$true;restartDelayMs=5000;recoverOnStart=$true;watchFolders=$WatchFolders;watchScanIntervalMs=60000}
+  $cfg=[ordered]@{serverUrl=$ServerUrl;agentToken=$AgentToken;ffmpegPath='ffmpeg';ffprobePath='ffprobe';autoRestart=$true;restartDelayMs=5000;recoverOnStart=$true;watchFolders=$WatchFolders;watchScanIntervalMs=60000;allowInsecureLan=[bool]$AllowInsecureLan}
   $cfg | ConvertTo-Json -Depth 5 | Set-Content -Encoding UTF8 'apps\agent\config.json'
   try { icacls (Join-Path $InstallDir 'apps\agent\config.json') /inheritance:r /grant:r "$env:USERNAME:(R,W)" | Out-Null } catch { Write-Warning "Could not tighten ACL on agent config: $($_.Exception.Message)" }
 }
