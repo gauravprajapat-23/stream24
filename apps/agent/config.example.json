@@ -10,5 +10,6 @@
     "D:\\Stream24\\media"
   ],
   "watchScanIntervalMs": 60000,
-  "allowInsecureLan": false
+  "allowInsecureLan": false,
+  "caCertPath": ""
 }
