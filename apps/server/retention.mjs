@@ -1,4 +1,11 @@
 function norm(p){return String(p||'').replace(/\\/g,'/').replace(/\/+$/,'').toLowerCase();}
+export function streamRequiredAssets(stream={}){
+  const out=[];const seen=new Set();const add=p=>{const v=String(p||'').trim();const k=norm(v);if(v&&!seen.has(k)){seen.add(k);out.push(v);}};
+  for(const p of (stream.basePlaylist?.length?stream.basePlaylist:stream.playlist||[]))add(p);
+  for(const b of stream.programming?.blocks||[])for(const p of b.playlist||[])add(p);
+  if(stream.branding?.enabled)add(stream.branding.imagePath);
+  return out;
+}
 export function referencedPaths(streams=[],templates=[]){
   const out=new Set();
   const add=p=>{if(p)out.add(norm(p));};
@@ -11,7 +18,7 @@ export function referencedPaths(streams=[],templates=[]){
   return out;
 }
 export function replicaState({stream,deviceId,catalog=[]}){
-  const canonical=(stream.basePlaylist?.length?stream.basePlaylist:stream.playlist||[]).filter(Boolean);
+  const canonical=streamRequiredAssets(stream);
   const primary=new Map(catalog.filter(x=>x.deviceId===stream.deviceId).map(x=>[norm(x.canonicalPath),x]));
   const backup=new Map(catalog.filter(x=>x.deviceId===deviceId).map(x=>[norm(x.canonicalPath),x]));
   let verified=0;const missing=[],stale=[];
