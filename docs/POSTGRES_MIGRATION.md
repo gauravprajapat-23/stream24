@@ -7,9 +7,10 @@ This is migration groundwork for replacing the single-process JSON store. It **d
 - `db/migrations/001_postgres_foundation.sql`: JSONB staging table, billing payment/webhook/entitlement tables, and stream reservations.
 - `db/migrations/002_stream_lease_renewal.sql`: lease renewal that requires a matching unreleased reservation and active entitlement.
 - `apps/server/postgres-runtime.mjs`: injected-pool transaction boundary with commit/rollback, isolation-level allowlisting, health ping, and pool shutdown.
-- `apps/server/postgres-stream-reservations.mjs`: an injected-pool adapter for reserve, renew, and release calls. Neither module is wired into the running HTTP server yet.
+- `apps/server/postgres-stream-reservations.mjs`: an injected-pool adapter for reserve, renew, and release calls.
+- `apps/server/postgres-stream-lifecycle.mjs`: transaction-scoped start/stop operations that pair quota reservation/release with stream JSONB record persistence; this is a repository primitive, not wired into the running HTTP server.
 - `scripts/export-json-to-postgres.mjs`: exports the existing JSON store into repeatable upserts for the staging table.
-- `tests/postgres-migration.test.mjs`, `tests/postgres-stream-reservations.test.mjs`, and `tests/postgres-runtime.test.mjs`: export/schema checks and mocked adapter/transaction behavior tests.
+- `tests/postgres-migration.test.mjs`, `tests/postgres-stream-reservations.test.mjs`, `tests/postgres-runtime.test.mjs`, and `tests/postgres-stream-lifecycle.test.mjs`: export/schema checks and mocked adapter/transaction/lifecycle behavior tests.
 
 ## Safe pilot workflow
 
@@ -48,7 +49,7 @@ The JSON exporter intentionally imports all source collections into `stream24_re
 
 ## Adapter contract and limits
 
-The runtime boundary accepts a `pg.Pool`-compatible object but does not import or install the `pg` package itself. `transaction()` checks out a dedicated client, begins a transaction, applies an allowlisted isolation level, commits on success, rolls back on failure, and releases the client in all cases. `ping()` and `close()` expose health and shutdown hooks. The reservation adapter calls SQL functions using bound parameters; lease duration is limited to 15–300 seconds.
+The runtime boundary accepts a `pg.Pool`-compatible object but does not import or install the `pg` package itself. `transaction()` checks out a dedicated client, begins a transaction, applies an allowlisted isolation level, commits on success, rolls back on failure, and releases the client in all cases. `ping()` and `close()` expose health and shutdown hooks. The reservation adapter calls SQL functions using bound parameters; lease duration is limited to 15–300 seconds. The stream lifecycle primitive reserves quota and upserts the stream record in the same transaction on start; on stop it takes the per-owner advisory lock, releases the reservation and persists the stopped state in one transaction.
 
 The adapter is **not production enforcement** yet. The HTTP server, scheduler, worker heartbeat, billing webhook, and authentication code still use the JSON store. A successful unit test against a mock pool does not prove the SQL has been applied or that PostgreSQL concurrency behavior has been integration-tested.
 
@@ -56,7 +57,7 @@ The adapter is **not production enforcement** yet. The HTTP server, scheduler, w
 
 - Install/configure the PostgreSQL driver and wire the runtime transaction boundary into a cohesive repository and request path, then migrate every request handler, scheduler and agent path away from direct `store.data` access.
 - Convert authentication, stream creation/start/stop, webhook handling and payment grants to transactions.
-- Use reservation functions in the same transaction as stream-start state changes, and renew/release leases on heartbeat and stop.
+- Wire the lifecycle primitive into the actual stream-start/stop request paths only as part of a cohesive runtime migration; add heartbeat-driven lease renewal and crash-recovery reconciliation before enabling it for customers.
 - Add transactional webhook idempotency and unique payment constraints in the runtime path; the schema alone does not enforce current app behavior.
 - Test concurrent starts from separate app instances, crash recovery, lease renewal, backups, restore, and JSON-to-PostgreSQL parity against a real PostgreSQL instance.
 - Do not set a production `DATABASE_URL` expecting the current server to use it. Runtime cutover is not implemented.
