@@ -20,14 +20,16 @@ export async function saveUploadedVideo(req, { root, ownerId, maxBytes }) {
   const temp = `${target}.uploading`;
   let bytes = 0, tooLarge = false;
   const output = createWriteStream(temp, { flags: 'wx', mode: 0o600 });
+  const outputError = new Promise((resolve, reject) => output.once('error', reject));
+  outputError.catch(() => {});
   try {
     for await (const chunk of req) {
       bytes += chunk.length;
       if (bytes > maxBytes) { tooLarge = true; continue; }
-      if (!output.write(chunk)) await once(output, 'drain');
+      if (!output.write(chunk)) await Promise.race([once(output, 'drain'), outputError]);
     }
     output.end();
-    await once(output, 'finish');
+    await Promise.race([once(output, 'finish'), outputError]);
     if (tooLarge) throw Object.assign(new Error('Upload exceeds the configured size limit.'), { statusCode: 413 });
     if (!bytes) throw Object.assign(new Error('Uploaded file is empty.'), { statusCode: 400 });
     fs.renameSync(temp, target);
