@@ -209,3 +209,16 @@ powershell -ExecutionPolicy Bypass -File .\scripts\windows\setup-stream24.ps1 -M
 ```
 
 For a second worker PC, copy only `data\tls\ca-cert.pem` from the server PC and pass its path as `-CaCertPath`; do not copy the CA private key.
+
+
+## Cloud VPS mode (Option A)
+
+The `feat/cloud-vps-worker` branch adds a single-VPS deployment with Docker Compose, a persistent Linux FFmpeg worker, shared video storage, and authenticated browser uploads. This lets a stream continue after your own PC is switched off, provided the VPS and its worker remain running.
+
+See [Cloud VPS deployment](docs/CLOUD_VPS_DEPLOYMENT.md) for deployment, HTTPS, worker-token setup, upload limits, and production acceptance checks. The cloud upload UI requires `STREAM24_MEDIA_ROOT` to be configured and mounted into both the server and worker containers. Test with a private/unlisted YouTube broadcast before public use.
+
+A zero-monthly-fee trial path using an eligible Oracle Cloud Always Free VM is documented in [Free cloud VM deployment](docs/CLOUD_FREE_VM_DEPLOYMENT.md). Free-tier capacity and billing eligibility must be verified in the Oracle console; test one stream before attempting two or three.
+
+## SaaS subscriptions and scale plan
+
+The SaaS billing foundation now includes the ₹30/24-hour single-stream and ₹99/24-hour five-stream pass catalog, configurable monthly Razorpay plans, server-created checkout requests, signature-verified/idempotent webhooks, server-side entitlement enforcement, and a basic Billing view. Setup and limitations are documented in [SaaS subscriptions and scaling](docs/SAAS_SUBSCRIPTIONS_AND_SCALING.md) and [Cloud VPS deployment](docs/CLOUD_VPS_DEPLOYMENT.md). PostgreSQL migration preparation (schema, atomic reservation functions, and JSON export tooling) is documented in [PostgreSQL migration preparation](docs/POSTGRES_MIGRATION.md); the running server still uses JSON and has not cut over. Payments are **not live** until merchant credentials and webhook delivery are configured and tested; PostgreSQL runtime cutover, public SaaS onboarding, and scalable worker infrastructure remain production blockers.
