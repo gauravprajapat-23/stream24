@@ -2,8 +2,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { createWriteStream } from 'node:fs';
-import { Transform } from 'node:stream';
-import { pipeline } from 'node:stream/promises';
+import { once } from 'node:events';
 
 const VIDEO_EXTENSIONS = new Set(['.mp4','.m4v','.mov','.mkv','.webm','.avi','.mpeg','.mpg','.ts','.m2ts']);
 const safeName = value => path.basename(String(value || 'video')).replace(/[^a-zA-Z0-9._ -]/g, '_').replace(/\s+/g, ' ').trim().replace(/^\.+/, '').slice(0, 120) || 'video.mp4';
@@ -19,20 +18,22 @@ export async function saveUploadedVideo(req, { root, ownerId, maxBytes }) {
   const storedName = `${Date.now()}-${crypto.randomBytes(5).toString('hex')}-${filename}`;
   const target = path.join(ownerDir, storedName);
   const temp = `${target}.uploading`;
-  let bytes = 0;
-  const limiter = new Transform({
-    transform(chunk, encoding, callback) {
-      bytes += chunk.length;
-      if (bytes > maxBytes) return callback(Object.assign(new Error('Upload exceeds the configured size limit.'), { statusCode: 413 }));
-      callback(null, chunk);
-    }
-  });
+  let bytes = 0, tooLarge = false;
+  const output = createWriteStream(temp, { flags: 'wx', mode: 0o600 });
   try {
-    await pipeline(req, limiter, createWriteStream(temp, { flags: 'wx', mode: 0o600 }));
+    for await (const chunk of req) {
+      bytes += chunk.length;
+      if (bytes > maxBytes) { tooLarge = true; continue; }
+      if (!output.write(chunk)) await once(output, 'drain');
+    }
+    output.end();
+    await once(output, 'finish');
+    if (tooLarge) throw Object.assign(new Error('Upload exceeds the configured size limit.'), { statusCode: 413 });
     if (!bytes) throw Object.assign(new Error('Uploaded file is empty.'), { statusCode: 400 });
     fs.renameSync(temp, target);
     return { name: filename, path: target, sizeBytes: bytes, uploadedAt: new Date().toISOString() };
   } catch (error) {
+    output.destroy();
     try { fs.rmSync(temp, { force: true }); } catch {}
     throw error;
   }
