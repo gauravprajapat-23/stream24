@@ -209,3 +209,10 @@ powershell -ExecutionPolicy Bypass -File .\scripts\windows\setup-stream24.ps1 -M
 ```
 
 For a second worker PC, copy only `data\tls\ca-cert.pem` from the server PC and pass its path as `-CaCertPath`; do not copy the CA private key.
+
+
+## Cloud VPS mode (Option A)
+
+The `feat/cloud-vps-worker` branch adds a single-VPS deployment with Docker Compose, a persistent Linux FFmpeg worker, shared video storage, and authenticated browser uploads. This lets a stream continue after your own PC is switched off, provided the VPS and its worker remain running.
+
+See [Cloud VPS deployment](docs/CLOUD_VPS_DEPLOYMENT.md) for deployment, HTTPS, worker-token setup, upload limits, and production acceptance checks. The cloud upload UI requires `STREAM24_MEDIA_ROOT` to be configured and mounted into both the server and worker containers. Test with a private/unlisted YouTube broadcast before public use.
