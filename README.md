@@ -216,3 +216,5 @@ For a second worker PC, copy only `data\tls\ca-cert.pem` from the server PC and 
 The `feat/cloud-vps-worker` branch adds a single-VPS deployment with Docker Compose, a persistent Linux FFmpeg worker, shared video storage, and authenticated browser uploads. This lets a stream continue after your own PC is switched off, provided the VPS and its worker remain running.
 
 See [Cloud VPS deployment](docs/CLOUD_VPS_DEPLOYMENT.md) for deployment, HTTPS, worker-token setup, upload limits, and production acceptance checks. The cloud upload UI requires `STREAM24_MEDIA_ROOT` to be configured and mounted into both the server and worker containers. Test with a private/unlisted YouTube broadcast before public use.
+
+A zero-monthly-fee trial path using an eligible Oracle Cloud Always Free VM is documented in [Free cloud VM deployment](docs/CLOUD_FREE_VM_DEPLOYMENT.md). Free-tier capacity and billing eligibility must be verified in the Oracle console; test one stream before attempting two or three.
