@@ -31,7 +31,7 @@ services:
         condition: service_healthy
     environment:
       STREAM24_AGENT_CONFIG: /run/stream24/config.json
-      STREAM24_AGENT_TOKEN: ${STREAM24_AGENT_TOKEN:?Create a worker in Stream24 and set its token in .env}
+      STREAM24_AGENT_TOKEN: ${STREAM24_AGENT_TOKEN:-}
       STREAM24_SERVER_URL: http://server:3000
       STREAM24_MEDIA_ROOT: /data/media
     entrypoint: ["node", "/usr/local/bin/stream24-agent-entrypoint.mjs"]
