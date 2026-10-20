@@ -61,4 +61,5 @@ The shared Docker volume is mounted at `/data/media` inside both containers. Kee
 - [ ] A media file stored in `/data/media` passes Preflight.
 - [ ] A private/unlisted test stream starts, reports live telemetry, and stops cleanly.
 - [ ] The VPS worker continues after the user's PC is shut down.
-- [ ] Browser upload UI/API, upload limits, storage cleanup, and disk-full errors are implemented before calling the product fully upload-to-live ready.
+- [ ] Browser uploads are tested through the actual HTTPS reverse proxy with realistic large files.
+- [ ] Disk-full behavior, storage cleanup/retention, and backup/restore of the media volume are validated.
