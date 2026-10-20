@@ -54,7 +54,7 @@ The shared Docker volume is mounted at `/data/media` inside both containers. Kee
 
 ## SaaS billing API (initial implementation)
 
-The billing endpoints are present on `feat/cloud-vps-worker`, but they are **not live until you configure your own Razorpay merchant credentials and test the full checkout/webhook path**. No credentials should be pasted into chat or committed to Git.
+The billing endpoints and a basic Billing view that launches Razorpay Checkout are present on `feat/cloud-vps-worker`, but they are **not live until you configure your own Razorpay merchant credentials and test the full checkout/webhook path**. No credentials should be pasted into chat or committed to Git.
 
 1. Copy the billing environment placeholders from `.env.cloud-vps.example` into the server's private `.env` or secret manager.
 2. In Razorpay test mode, configure `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, and a separate `RAZORPAY_WEBHOOK_SECRET`.
