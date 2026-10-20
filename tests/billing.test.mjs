@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import {
   PASS_PLANS, getPlan, listPlans, verifyWebhookSignature, processRazorpayWebhook,
-  entitlementSummary, assertCanStartStream, expireEntitlements
+  entitlementSummary, assertCanStartStream, expireEntitlements, createRazorpayOrder, createRazorpaySubscription
 } from '../apps/server/billing.mjs';
 
 const secret = 'test-webhook-secret';
@@ -110,4 +110,53 @@ test('enforces server-side concurrent stream limits and expires entitlements', (
   assert.equal(expireEntitlements(store, Date.parse('2026-10-22T12:00:00Z')), true);
   assert.equal(store.entitlements[0].status, 'EXPIRED');
   assert.throws(() => assertCanStartStream(store, 'owner_1', 'stream_2', Date.parse('2026-10-22T12:00:00Z')), { statusCode: 402, code: 'ENTITLEMENT_REQUIRED' });
+});
+
+test('creates day-pass orders server-side using the fixed INR amount', async () => {
+  const calls = [];
+  const result = await createRazorpayOrder({
+    plan: getPlan('pass-five', env),
+    ownerId: 'owner_1',
+    env: { RAZORPAY_KEY_ID: 'rzp_test_id', RAZORPAY_KEY_SECRET: 'test_secret' },
+    fetchImpl: async (url, options) => {
+      calls.push({ url, options });
+      return { ok: true, json: async () => ({ id: 'order_test_1', amount: 9900, currency: 'INR', status: 'created' }) };
+    }
+  });
+  assert.equal(result.id, 'order_test_1');
+  assert.equal(calls[0].url, 'https://api.razorpay.com/v1/orders');
+  assert.equal(JSON.parse(calls[0].options.body).amount, 9900);
+  assert.match(calls[0].options.headers.authorization, /^Basic /);
+});
+
+test('validates monthly Razorpay plan amount/currency/cadence before creating a subscription', async () => {
+  const calls = [];
+  const plan = getPlan('monthly-single', env);
+  const result = await createRazorpaySubscription({
+    plan,
+    ownerId: 'owner_1',
+    env: { RAZORPAY_KEY_ID: 'rzp_test_id', RAZORPAY_KEY_SECRET: 'test_secret' },
+    fetchImpl: async (url, options) => {
+      calls.push({ url, options });
+      if (url.includes('/plans/')) return { ok: true, json: async () => ({ period: 'monthly', interval: 1, item: { amount: 49900, currency: 'INR' } }) };
+      return { ok: true, json: async () => ({ id: 'sub_test_1', status: 'created', short_url: 'https://rzp.io/i/test' }) };
+    }
+  });
+  assert.equal(result.id, 'sub_test_1');
+  assert.equal(calls.length, 2);
+  assert.match(calls[0].url, /\/v1\/plans\/plan_month_single_test$/);
+  assert.equal(JSON.parse(calls[1].options.body).plan_id, 'plan_month_single_test');
+
+  let subscriptionCreated = false;
+  await assert.rejects(createRazorpaySubscription({
+    plan,
+    ownerId: 'owner_1',
+    env: { RAZORPAY_KEY_ID: 'rzp_test_id', RAZORPAY_KEY_SECRET: 'test_secret' },
+    fetchImpl: async url => {
+      if (url.includes('/plans/')) return { ok: true, json: async () => ({ period: 'monthly', interval: 1, item: { amount: 1, currency: 'INR' } }) };
+      subscriptionCreated = true;
+      return { ok: true, json: async () => ({ id: 'should_not_exist' }) };
+    }
+  }), { statusCode: 409 });
+  assert.equal(subscriptionCreated, false);
 });
