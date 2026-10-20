@@ -221,4 +221,4 @@ A zero-monthly-fee trial path using an eligible Oracle Cloud Always Free VM is d
 
 ## SaaS subscriptions and scale plan
 
-The proposed multi-tenant subscription architecture, ₹30/24-hour single-stream and ₹99/24-hour five-stream pass model, worker-fleet design, and rollout/cost guardrails are documented in [SaaS subscriptions and scaling](docs/SAAS_SUBSCRIPTIONS_AND_SCALING.md). This is a design/rollout plan, not a claim that payment processing or 1,000-customer capacity is implemented yet.
+The SaaS billing foundation now includes the ₹30/24-hour single-stream and ₹99/24-hour five-stream pass catalog, configurable monthly Razorpay plans, server-created checkout requests, signature-verified/idempotent webhooks, server-side entitlement enforcement, and a basic Billing view. Setup and limitations are documented in [SaaS subscriptions and scaling](docs/SAAS_SUBSCRIPTIONS_AND_SCALING.md) and [Cloud VPS deployment](docs/CLOUD_VPS_DEPLOYMENT.md). Payments are **not live** until merchant credentials and webhook delivery are configured and tested; PostgreSQL, public SaaS onboarding, and scalable worker infrastructure remain production blockers.
