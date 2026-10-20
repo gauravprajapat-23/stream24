@@ -6,6 +6,30 @@ Stream24 can become a multi-tenant SaaS with one account per customer, self-serv
 
 **Do not launch a 1,000-customer/5,000–10,000-concurrent-stream promise on the current JSON-store + single-stream-agent design or on a free VM.** The existing cloud branch is a single-node deployment foundation and proof of concept, not a production multi-tenant streaming fleet.
 
+## Current implementation status on `feat/cloud-vps-worker`
+
+The first server-side billing phase is implemented as an opt-in integration on the existing single-node JSON store. It includes the fixed ₹30/₹99 day-pass catalog, configurable monthly plan IDs/prices, server-created Razorpay orders/subscriptions, raw-body HMAC-SHA256 webhook verification, event-ID and payment-ID idempotency, entitlement records, account-wide concurrent-stream checks, and periodic expiry/limit enforcement. Tests cover these core billing rules.
+
+**This is not a live payment integration or a production multi-tenant billing launch.** No merchant credentials have been supplied/configured, no real Razorpay webhook has been received, and there is not yet a complete customer checkout/billing UI. The JSON store is still single-process and is not safe for horizontally scaled SaaS; migrate billing and stream reservations to transactional PostgreSQL before multi-instance or high-concurrency production use.
+
+### Billing API surface
+
+- `GET /api/billing/plans` — public pass catalog and configured monthly plans.
+- `GET /api/billing/summary` — authenticated account entitlements, orders and subscriptions.
+- `POST /api/billing/orders` — authenticated; accepts `{ "planId": "pass-single" }` or `pass-five`, creates the Razorpay order server-side, and records the expected amount/owner locally.
+- `POST /api/billing/subscriptions` — authenticated; accepts `monthly-single` or `monthly-five` after matching Razorpay plan IDs and amounts are configured.
+- `POST /api/billing/webhooks/razorpay` — provider callback; validates `X-Razorpay-Signature` against the exact raw request body, requires `x-razorpay-event-id`, and grants access only for matching captured payments.
+
+The start endpoint checks entitlements on the server when `STREAM24_SAAS_BILLING_ENFORCED=true`. A periodic server scheduler marks expired entitlements and queues stops for streams over the remaining concurrency limit. For backward compatibility, billing enforcement defaults off until explicitly enabled. **Do not enable it for customers until test-mode payments, webhook delivery, checkout, and stop-on-expiry have been validated.**
+
+Required server environment:
+- `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, and a separate `RAZORPAY_WEBHOOK_SECRET`.
+- `RAZORPAY_PLAN_MONTHLY_SINGLE` plus `STREAM24_MONTHLY_SINGLE_AMOUNT_PAISE`.
+- `RAZORPAY_PLAN_MONTHLY_FIVE` plus `STREAM24_MONTHLY_FIVE_AMOUNT_PAISE`.
+- `STREAM24_SAAS_BILLING_ENFORCED=true` only for the controlled billing test/pilot after the above is configured.
+
+Create the monthly plans in Razorpay Dashboard and use the exact configured amount in paise. Never commit secrets. Configure webhook events `order.paid`, `subscription.charged`, `subscription.cancelled`, `subscription.halted`, and `subscription.completed`. Razorpay may retry and deliver events out of order, so event and payment IDs are both deduplicated.
+
 ## Product model
 
 The requested offers are best represented as prepaid 24-hour passes (one-time purchases), rather than automatically recurring subscriptions:
@@ -17,7 +41,7 @@ The requested offers are best represented as prepaid 24-hour passes (one-time pu
 
 The concurrency limit applies across the customer's entire account, not per worker or per browser tab. Creating multiple stream definitions must not increase the allowed number of running streams. If the pass expires, reject new starts and stop any running streams owned by that pass, with a clear warning before expiration.
 
-A separate monthly auto-renewing plan can be added later. Keep one-time day passes and recurring monthly subscriptions as distinct products and payment lifecycles. Do not call a 24-hour one-time pass an auto-renewing subscription.
+Monthly auto-renewing plans are a separate product and lifecycle. The first billing API supports a one-stream monthly plan and a five-stream monthly plan, but each remains unavailable until its monthly amount and Razorpay dashboard plan ID are configured. Do not call a 24-hour one-time pass an auto-renewing subscription.
 
 Before launch, decide whether the 24-hour window begins at payment success or first stream start. Recommended initial rule: start at successful payment capture, display the exact expiry time, and do not pause the timer when a stream is stopped.
 
