@@ -6,9 +6,10 @@ This is migration groundwork for replacing the single-process JSON store. It **d
 
 - `db/migrations/001_postgres_foundation.sql`: JSONB staging table, billing payment/webhook/entitlement tables, and stream reservations.
 - `db/migrations/002_stream_lease_renewal.sql`: lease renewal that requires a matching unreleased reservation and active entitlement.
-- `apps/server/postgres-stream-reservations.mjs`: an injected-pool adapter for reserve, renew, and release calls. It is not wired into the running HTTP server yet.
+- `apps/server/postgres-runtime.mjs`: injected-pool transaction boundary with commit/rollback, isolation-level allowlisting, health ping, and pool shutdown.
+- `apps/server/postgres-stream-reservations.mjs`: an injected-pool adapter for reserve, renew, and release calls. Neither module is wired into the running HTTP server yet.
 - `scripts/export-json-to-postgres.mjs`: exports the existing JSON store into repeatable upserts for the staging table.
-- `tests/postgres-migration.test.mjs` and `tests/postgres-stream-reservations.test.mjs`: export/schema checks and mocked adapter behavior tests.
+- `tests/postgres-migration.test.mjs`, `tests/postgres-stream-reservations.test.mjs`, and `tests/postgres-runtime.test.mjs`: export/schema checks and mocked adapter/transaction behavior tests.
 
 ## Safe pilot workflow
 
@@ -47,13 +48,13 @@ The JSON exporter intentionally imports all source collections into `stream24_re
 
 ## Adapter contract and limits
 
-The adapter accepts a `pg.Pool`-compatible object but does not import or install the `pg` package itself. This keeps the current app dependency-free and allows unit testing with a mock pool. Its reserve, renew, and release methods call SQL functions using bound parameters. Lease duration is limited to 15–300 seconds.
+The runtime boundary accepts a `pg.Pool`-compatible object but does not import or install the `pg` package itself. `transaction()` checks out a dedicated client, begins a transaction, applies an allowlisted isolation level, commits on success, rolls back on failure, and releases the client in all cases. `ping()` and `close()` expose health and shutdown hooks. The reservation adapter calls SQL functions using bound parameters; lease duration is limited to 15–300 seconds.
 
 The adapter is **not production enforcement** yet. The HTTP server, scheduler, worker heartbeat, billing webhook, and authentication code still use the JSON store. A successful unit test against a mock pool does not prove the SQL has been applied or that PostgreSQL concurrency behavior has been integration-tested.
 
 ## Required before PostgreSQL can be used by the app
 
-- Install/configure the PostgreSQL driver and implement a runtime repository, then migrate every request handler, scheduler and agent path away from direct `store.data` access.
+- Install/configure the PostgreSQL driver and wire the runtime transaction boundary into a cohesive repository and request path, then migrate every request handler, scheduler and agent path away from direct `store.data` access.
 - Convert authentication, stream creation/start/stop, webhook handling and payment grants to transactions.
 - Use reservation functions in the same transaction as stream-start state changes, and renew/release leases on heartbeat and stop.
 - Add transactional webhook idempotency and unique payment constraints in the runtime path; the schema alone does not enforce current app behavior.
