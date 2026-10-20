@@ -30,7 +30,7 @@ Do not expect a Windows path such as `C:\\Users\\...\\video.mp4` to work on Linu
 3. Generate a strong `APP_MASTER_KEY` and store it in a password manager/secure secret store. Back it up separately; encrypted Stream24 secrets cannot be recovered without it.
 4. Build the image: `docker compose build`.
 5. Start the server only: `docker compose up -d server`.
-6. Put Stream24 behind HTTPS before creating the owner account. The first-run setup route is loopback-restricted by default. If remote setup must be temporarily enabled, enable `STREAM24_ALLOW_REMOTE_SETUP=1` only for the initial setup, create the owner, then remove the setting and recreate the server container immediately.
+6. Keep `STREAM24_ALLOW_REMOTE_SETUP` unset/disabled. From your own PC, open an SSH tunnel with `ssh -L 3000:127.0.0.1:3000 <ssh-user>@<vps-ip>` and visit `http://localhost:3000` to create the owner account; the server sees the setup request as loopback. Keep the tunnel open during setup. Configure the HTTPS reverse proxy before normal remote use.
 7. Sign in and create one worker from the Workers/Devices page. Copy the worker token immediately; it is shown only once.
 8. Set `STREAM24_AGENT_TOKEN` in `.env` to that token. Protect `.env` from other users.
 9. Start the worker: `docker compose up -d worker`.
