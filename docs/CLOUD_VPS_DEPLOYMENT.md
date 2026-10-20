@@ -9,9 +9,11 @@ This is the first cloud deployment milestone: run the Stream24 control server an
 - Worker restart policy and server health check.
 - No dependency on a Windows drive path once media is stored in the VPS media volume.
 
-## Important current limitation
+## Upload-to-live workflow
 
-This infrastructure change does **not by itself add browser video uploads**. The current dashboard media workflow is based on worker-scanned paths. Until the upload API/UI is implemented, files must be copied to the VPS media volume by an administrator and streams must reference the path visible inside the worker container (normally `/data/media/filename.mp4`). Do not expect a Windows path such as `C:\\Users\\...\\video.mp4` to work on Linux.
+The cloud branch includes an authenticated browser upload endpoint and a Media-page upload panel. The server writes each upload under the configured persistent `STREAM24_MEDIA_ROOT`, grouped by owner, and the same volume is mounted in the worker container. Use **Upload selected videos**, then **Use uploaded videos in a stream** to add them to a new stream playlist. The API enforces a configurable upload-size limit (default 5 GiB) and only accepts known video extensions. Run Preflight before starting a stream. Large uploads should use HTTPS and a reverse proxy configured for streaming request bodies and an adequate body-size limit.
+
+Do not expect a Windows path such as `C:\\Users\\...\\video.mp4` to work on Linux.
 
 ## VPS prerequisites
 
@@ -33,7 +35,7 @@ This infrastructure change does **not by itself add browser video uploads**. The
 8. Set `STREAM24_AGENT_TOKEN` in `.env` to that token. Protect `.env` from other users.
 9. Start the worker: `docker compose up -d worker`.
 10. Verify `docker compose ps`, `docker compose logs --tail=100 server worker`, and `GET /api/health` through the HTTPS domain.
-11. Copy a test MP4 into the persistent media volume using an administrator-only method, then create a stream using its Linux path. Run Preflight before starting a private/unlisted test stream.
+11. Open Media, upload a test MP4, choose **Use uploaded videos in a stream**, configure the YouTube destination, and save the stream. Run Preflight before starting a private/unlisted test stream.
 
 ## Upload path (current infrastructure)
 
