@@ -52,6 +52,24 @@ The shared Docker volume is mounted at `/data/media` inside both containers. Kee
 - Use private/unlisted streams until upload, preflight, and stop/start recovery are validated.
 - The worker's plain HTTP control connection is confined to the private Docker network. Do not copy this configuration to a public network.
 
+## SaaS billing API (initial implementation)
+
+The billing endpoints are present on `feat/cloud-vps-worker`, but they are **not live until you configure your own Razorpay merchant credentials and test the full checkout/webhook path**. No credentials should be pasted into chat or committed to Git.
+
+1. Copy the billing environment placeholders from `.env.cloud-vps.example` into the server's private `.env` or secret manager.
+2. In Razorpay test mode, configure `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, and a separate `RAZORPAY_WEBHOOK_SECRET`.
+3. Create two monthly plans in Razorpay Dashboard. Set `RAZORPAY_PLAN_MONTHLY_SINGLE` and `RAZORPAY_PLAN_MONTHLY_FIVE` to the returned plan IDs, and set `STREAM24_MONTHLY_SINGLE_AMOUNT_PAISE` / `STREAM24_MONTHLY_FIVE_AMOUNT_PAISE` to the exact plan prices in paise. Monthly prices are intentionally not guessed in this repository.
+4. Configure the HTTPS webhook URL `https://YOUR_DOMAIN/api/billing/webhooks/razorpay` for `order.paid`, `subscription.charged`, `subscription.cancelled`, `subscription.halted`, and `subscription.completed`. The webhook secret is distinct from the API key secret.
+5. Keep `STREAM24_SAAS_BILLING_ENFORCED=false` until test-mode orders, monthly subscription charges, duplicate webhook delivery, amount mismatch, expiry, and stop-on-expiry have been verified. Then set it to `true` for a controlled pilot and restart the server.
+
+Initial API routes:
+- `GET /api/billing/plans` — list pass plans and monthly plans that have been configured.
+- `GET /api/billing/summary` — authenticated entitlement and payment summary.
+- `POST /api/billing/orders` with `{ "planId": "pass-single" }` or `pass-five` — creates a pass order server-side.
+- `POST /api/billing/subscriptions` with `{ "planId": "monthly-single" }` or `monthly-five` — creates a recurring subscription from a configured Razorpay plan.
+
+The server grants entitlements only after a valid webhook signature, matching server-recorded amount/currency, and a captured payment. Webhook event IDs and payment IDs are deduplicated. The billing store currently uses the same JSON persistence as the single-node pilot; it is not suitable for horizontally scaled SaaS or concurrent multi-instance reservations. PostgreSQL transactions and a complete checkout UI remain production blockers.
+
 ## Acceptance checklist
 
 - [ ] Server health endpoint reports `ok: true`.
