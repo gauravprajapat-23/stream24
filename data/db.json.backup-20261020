@@ -1,0 +1,882 @@
+{
+  "users": [
+    {
+      "id": "usr_e815ad4d701e0c05",
+      "name": "gaurav",
+      "email": "test@gmail.com",
+      "passwordHash": "scrypt$16384$8$1$7d84f176d9728cddd16b4e7705624245$765873b4561b622fd9a3efd314e0350f02b77aed06e4555e50df9ca5ebc66d777ecb47f277121b0cbddc0f93de72937b6ebeba2d308c7c352ac9da80486c931e",
+      "role": "OWNER",
+      "createdAt": "2026-10-20T14:14:37.636Z"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "ses_6d86f73ba808fddf",
+      "userId": "usr_e815ad4d701e0c05",
+      "tokenHash": "a7892846441d5a7551fe473ab83761807518ee8feac0da174a0be5a09ab28cc5",
+      "createdAt": "2026-10-20T14:14:37.642Z",
+      "expiresAt": "2026-11-19T14:14:37.642Z"
+    }
+  ],
+  "devices": [
+    {
+      "id": "dev_588b7b9a92924036",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "name": "Home-pc",
+      "platform": "windows",
+      "agentTokenHash": "17392383ab2591f687a99980545b5d980075441535575dbef1e3e7a6d003b0fb",
+      "createdAt": "2026-10-20T14:21:09.786Z",
+      "lastSeenAt": "2026-10-20T14:38:25.884Z",
+      "version": "0.14.0",
+      "ffmpeg": true,
+      "ffprobe": true,
+      "status": "ONLINE",
+      "currentStreamId": null,
+      "currentIndex": 0,
+      "metrics": {
+        "hostname": "Gaurav",
+        "platform": "win32",
+        "arch": "x64",
+        "uptimeSeconds": 68522,
+        "memoryTotalBytes": 8464732160,
+        "memoryFreeBytes": 682012672,
+        "memoryUsedPercent": 92,
+        "loadAverage": [
+          0,
+          0,
+          0
+        ]
+      },
+      "mediaMappings": [],
+      "onlineSince": "2026-10-20T14:29:48.272Z",
+      "watchFolders": [
+        "D:\\Stream24\\media"
+      ],
+      "lastCatalogAt": "2026-10-20T14:37:48.358Z",
+      "storage": [
+        {
+          "root": "D:\\",
+          "totalBytes": 60899549184,
+          "freeBytes": 60065894400
+        }
+      ]
+    }
+  ],
+  "streams": [
+    {
+      "id": "str_902550371f255025",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "status": "FAILED",
+      "desiredRunning": false,
+      "createdAt": "2026-10-20T14:26:29.742Z",
+      "updatedAt": "2026-10-20T14:32:01.666Z",
+      "startedAt": null,
+      "stoppedAt": null,
+      "lastError": "Media file not found: \"C:\\Users\\RSP.tech Solution\\Downloads\\Doctor-lion.mp4\"",
+      "lastPreflight": {
+        "ok": false,
+        "checkedAt": "2026-10-20T14:30:37.233Z",
+        "media": null,
+        "persistentCompatible": false,
+        "error": "Media file not found: \"C:\\Users\\RSP.tech Solution\\Downloads\\Doctor-lion.mp4\""
+      },
+      "runtime": {
+        "currentIndex": 0,
+        "currentItem": "\"C:\\Users\\RSP.tech Solution\\Downloads\\Untitled_Scene_10-08_15_37_36_20261008210842.mp4\"",
+        "state": "IDLE",
+        "updatedAt": null
+      },
+      "analytics": {
+        "totalLiveSeconds": 0,
+        "starts": 0,
+        "reconnects": 0,
+        "failures": 3,
+        "lastLiveAt": null
+      },
+      "name": "Test Live",
+      "deviceId": "dev_588b7b9a92924036",
+      "basePlaylist": [
+        "\"C:\\Users\\RSP.tech Solution\\Downloads\\Doctor-lion.mp4\""
+      ],
+      "playlist": [
+        "\"C:\\Users\\RSP.tech Solution\\Downloads\\Doctor-lion.mp4\""
+      ],
+      "inputPath": "\"C:\\Users\\RSP.tech Solution\\Downloads\\Doctor-lion.mp4\"",
+      "rtmpUrl": "rtmp://a.rtmp.youtube.com/live2",
+      "loop": true,
+      "mode": "copy",
+      "videoBitrateKbps": 4000,
+      "audioBitrateKbps": 128,
+      "branding": {
+        "enabled": false,
+        "imagePath": "",
+        "position": "top-right",
+        "width": 220,
+        "opacity": 0.9
+      },
+      "encryptedStreamKey": "AB-XVvZo1VpYOsjF.wrms6Wxx6TS4uYyCdEeHHg.2eglT_ORY6Vl1TDFkjtR8etsi1h1WzI1",
+      "destinations": [
+        {
+          "id": "dst_18e9a46af8b8b73d",
+          "name": "Primary YouTube",
+          "role": "PRIMARY",
+          "enabled": true,
+          "rtmpUrl": "rtmp://a.rtmp.youtube.com/live2",
+          "encryptedKey": "FXZW1Hjf-rTJj0V8.frGuIhWtuT60E3sjj-mkKg.clozfOfp6Qhude2rbfZklqR9HJtACY-v"
+        }
+      ],
+      "failover": {
+        "enabled": false,
+        "mode": "PRIMARY_ONLY"
+      },
+      "workerFailover": {
+        "enabled": false,
+        "backupDeviceIds": [],
+        "takeoverAfterSeconds": 30,
+        "autoFailback": true,
+        "leaseGraceSeconds": 25
+      },
+      "activeDeviceId": "dev_588b7b9a92924036",
+      "schedule": {
+        "enabled": false,
+        "timezone": "Asia/Kolkata",
+        "startTime": "20:00",
+        "stopTime": "06:00",
+        "days": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "runtime": {
+          "lastShouldRun": null,
+          "lastEvaluatedAt": null
+        }
+      },
+      "programming": {
+        "enabled": true,
+        "timezone": "Asia/Kolkata",
+        "blocks": [],
+        "runtime": {
+          "activeBlockId": null,
+          "lastEvaluatedAt": "2026-10-20T14:38:25.414Z"
+        }
+      },
+      "youtube": {
+        "broadcastId": "",
+        "liveStreamId": "",
+        "title": "Test Live 1",
+        "description": "sf"
+      },
+      "assignmentEpoch": 2,
+      "leaseId": "lease_33707edf33e4ce3e",
+      "failoverState": {
+        "lastSwitchAt": "2026-10-20T14:29:55.876Z",
+        "lastReason": "MANUAL"
+      },
+      "workerPreflight": {
+        "dev_588b7b9a92924036": {
+          "ok": false,
+          "checkedAt": "2026-10-20T14:30:37.233Z",
+          "media": null,
+          "persistentCompatible": false,
+          "error": "Media file not found: \"C:\\Users\\RSP.tech Solution\\Downloads\\Doctor-lion.mp4\""
+        }
+      },
+      "assignedAt": "2026-10-20T14:29:55.876Z"
+    }
+  ],
+  "commands": [
+    {
+      "id": "cmd_6280cff348364e44",
+      "deviceId": "dev_588b7b9a92924036",
+      "type": "PREFLIGHT_STREAM",
+      "payload": {
+        "streamId": "str_902550371f255025",
+        "canonicalPlaylist": [
+          "\"C:\\Users\\RSP.tech Solution\\Downloads\\Untitled_Scene_10-08_15_37_36_20261008210842.mp4\""
+        ],
+        "playlist": [
+          "\"C:\\Users\\RSP.tech Solution\\Downloads\\Untitled_Scene_10-08_15_37_36_20261008210842.mp4\""
+        ],
+        "inputPath": "\"C:\\Users\\RSP.tech Solution\\Downloads\\Untitled_Scene_10-08_15_37_36_20261008210842.mp4\"",
+        "rtmpUrl": "rtmp://a.rtmp.youtube.com/live2",
+        "streamKey": "z8h8-juhm-vfy3-88f0-59zg",
+        "destinations": [
+          {
+            "id": "dst_18e9a46af8b8b73d",
+            "name": "Primary YouTube",
+            "role": "PRIMARY",
+            "rtmpUrl": "rtmp://a.rtmp.youtube.com/live2",
+            "streamKey": "z8h8-juhm-vfy3-88f0-59zg"
+          }
+        ],
+        "failover": {
+          "enabled": false,
+          "mode": "PRIMARY_ONLY"
+        },
+        "workerFailover": {
+          "enabled": false,
+          "backupDeviceIds": [],
+          "takeoverAfterSeconds": 30,
+          "autoFailback": true,
+          "leaseGraceSeconds": 25
+        },
+        "leaseId": null,
+        "assignmentEpoch": 0,
+        "leaseGraceSeconds": 25,
+        "loop": true,
+        "mode": "copy",
+        "videoBitrateKbps": 4000,
+        "audioBitrateKbps": 128,
+        "startIndex": 0,
+        "branding": {
+          "enabled": false,
+          "imagePath": "",
+          "position": "top-right",
+          "width": 220,
+          "opacity": 0.9
+        },
+        "programmingBlockId": null
+      },
+      "status": "FAILED",
+      "createdAt": "2026-10-20T14:27:56.190Z",
+      "claimedAt": "2026-10-20T14:28:22.741Z",
+      "completedAt": "2026-10-20T14:28:23.215Z",
+      "result": {
+        "ok": false,
+        "error": "Media file not found: \"C:\\Users\\RSP.tech Solution\\Downloads\\Untitled_Scene_10-08_15_37_36_20261008210842.mp4\""
+      }
+    },
+    {
+      "id": "cmd_a9de04b73291de6a",
+      "deviceId": "dev_588b7b9a92924036",
+      "type": "CAPTURE_PREVIEW",
+      "payload": {
+        "streamId": "str_902550371f255025",
+        "inputPath": "\"C:\\Users\\RSP.tech Solution\\Downloads\\Untitled_Scene_10-08_15_37_36_20261008210842.mp4\"",
+        "width": 640
+      },
+      "status": "FAILED",
+      "createdAt": "2026-10-20T14:27:58.682Z",
+      "claimedAt": "2026-10-20T14:28:25.250Z",
+      "completedAt": "2026-10-20T14:28:25.379Z",
+      "result": {
+        "ok": false,
+        "error": "Media file not found: \"C:\\Users\\RSP.tech Solution\\Downloads\\Untitled_Scene_10-08_15_37_36_20261008210842.mp4\""
+      }
+    },
+    {
+      "id": "cmd_14f0b110b4779d27",
+      "deviceId": "dev_588b7b9a92924036",
+      "type": "CAPTURE_PREVIEW",
+      "payload": {
+        "streamId": "str_902550371f255025",
+        "inputPath": "\"C:\\Users\\RSP.tech Solution\\Downloads\\Untitled_Scene_10-08_15_37_36_20261008210842.mp4\"",
+        "width": 640
+      },
+      "status": "FAILED",
+      "createdAt": "2026-10-20T14:28:00.542Z",
+      "claimedAt": "2026-10-20T14:28:27.762Z",
+      "completedAt": "2026-10-20T14:28:27.792Z",
+      "result": {
+        "ok": false,
+        "error": "Media file not found: \"C:\\Users\\RSP.tech Solution\\Downloads\\Untitled_Scene_10-08_15_37_36_20261008210842.mp4\""
+      }
+    },
+    {
+      "id": "cmd_41dcc3b4e4956691",
+      "deviceId": "dev_588b7b9a92924036",
+      "type": "START_STREAM",
+      "payload": {
+        "streamId": "str_902550371f255025",
+        "canonicalPlaylist": [
+          "\"C:\\Users\\RSP.tech Solution\\Downloads\\Untitled_Scene_10-08_15_37_36_20261008210842.mp4\""
+        ],
+        "playlist": [
+          "\"C:\\Users\\RSP.tech Solution\\Downloads\\Untitled_Scene_10-08_15_37_36_20261008210842.mp4\""
+        ],
+        "inputPath": "\"C:\\Users\\RSP.tech Solution\\Downloads\\Untitled_Scene_10-08_15_37_36_20261008210842.mp4\"",
+        "rtmpUrl": "rtmp://a.rtmp.youtube.com/live2",
+        "streamKey": "z8h8-juhm-vfy3-88f0-59zg",
+        "destinations": [
+          {
+            "id": "dst_18e9a46af8b8b73d",
+            "name": "Primary YouTube",
+            "role": "PRIMARY",
+            "rtmpUrl": "rtmp://a.rtmp.youtube.com/live2",
+            "streamKey": "z8h8-juhm-vfy3-88f0-59zg"
+          }
+        ],
+        "failover": {
+          "enabled": false,
+          "mode": "PRIMARY_ONLY"
+        },
+        "workerFailover": {
+          "enabled": false,
+          "backupDeviceIds": [],
+          "takeoverAfterSeconds": 30,
+          "autoFailback": true,
+          "leaseGraceSeconds": 25
+        },
+        "leaseId": "lease_a8a0afe959ce3886",
+        "assignmentEpoch": 1,
+        "leaseGraceSeconds": 25,
+        "loop": true,
+        "mode": "copy",
+        "videoBitrateKbps": 4000,
+        "audioBitrateKbps": 128,
+        "startIndex": 0,
+        "branding": {
+          "enabled": false,
+          "imagePath": "",
+          "position": "top-right",
+          "width": 220,
+          "opacity": 0.9
+        },
+        "programmingBlockId": null
+      },
+      "status": "FAILED",
+      "createdAt": "2026-10-20T14:28:47.965Z",
+      "claimedAt": "2026-10-20T14:28:48.270Z",
+      "completedAt": "2026-10-20T14:28:48.598Z",
+      "result": {
+        "ok": false,
+        "error": "Media file not found: \"C:\\Users\\RSP.tech Solution\\Downloads\\Untitled_Scene_10-08_15_37_36_20261008210842.mp4\""
+      }
+    },
+    {
+      "id": "cmd_73d4414a5d7e44fd",
+      "deviceId": "dev_588b7b9a92924036",
+      "type": "START_STREAM",
+      "payload": {
+        "streamId": "str_902550371f255025",
+        "canonicalPlaylist": [
+          "\"C:\\Users\\RSP.tech Solution\\Downloads\\Doctor-lion.mp4\""
+        ],
+        "playlist": [
+          "\"C:\\Users\\RSP.tech Solution\\Downloads\\Doctor-lion.mp4\""
+        ],
+        "inputPath": "\"C:\\Users\\RSP.tech Solution\\Downloads\\Doctor-lion.mp4\"",
+        "rtmpUrl": "rtmp://a.rtmp.youtube.com/live2",
+        "streamKey": "z8h8-juhm-vfy3-88f0-59zg",
+        "destinations": [
+          {
+            "id": "dst_18e9a46af8b8b73d",
+            "name": "Primary YouTube",
+            "role": "PRIMARY",
+            "rtmpUrl": "rtmp://a.rtmp.youtube.com/live2",
+            "streamKey": "z8h8-juhm-vfy3-88f0-59zg"
+          }
+        ],
+        "failover": {
+          "enabled": false,
+          "mode": "PRIMARY_ONLY"
+        },
+        "workerFailover": {
+          "enabled": false,
+          "backupDeviceIds": [],
+          "takeoverAfterSeconds": 30,
+          "autoFailback": true,
+          "leaseGraceSeconds": 25
+        },
+        "leaseId": "lease_33707edf33e4ce3e",
+        "assignmentEpoch": 2,
+        "leaseGraceSeconds": 25,
+        "loop": true,
+        "mode": "copy",
+        "videoBitrateKbps": 4000,
+        "audioBitrateKbps": 128,
+        "startIndex": 0,
+        "branding": {
+          "enabled": false,
+          "imagePath": "",
+          "position": "top-right",
+          "width": 220,
+          "opacity": 0.9
+        },
+        "programmingBlockId": null
+      },
+      "status": "FAILED",
+      "createdAt": "2026-10-20T14:29:55.879Z",
+      "claimedAt": "2026-10-20T14:31:59.659Z",
+      "completedAt": "2026-10-20T14:32:01.666Z",
+      "result": {
+        "ok": false,
+        "error": "Media file not found: \"C:\\Users\\RSP.tech Solution\\Downloads\\Doctor-lion.mp4\""
+      }
+    },
+    {
+      "id": "cmd_051e028c9ccd9140",
+      "deviceId": "dev_588b7b9a92924036",
+      "type": "FORCE_RECONNECT",
+      "payload": {
+        "streamId": "str_902550371f255025",
+        "leaseId": "lease_33707edf33e4ce3e",
+        "assignmentEpoch": 2
+      },
+      "status": "FAILED",
+      "createdAt": "2026-10-20T14:30:26.117Z",
+      "claimedAt": "2026-10-20T14:30:26.746Z",
+      "completedAt": "2026-10-20T14:30:26.785Z",
+      "result": {
+        "ok": false,
+        "error": "Stream is not currently running."
+      }
+    },
+    {
+      "id": "cmd_2661b9bf1efa3313",
+      "deviceId": "dev_588b7b9a92924036",
+      "type": "PREFLIGHT_STREAM",
+      "payload": {
+        "streamId": "str_902550371f255025",
+        "canonicalPlaylist": [
+          "\"C:\\Users\\RSP.tech Solution\\Downloads\\Doctor-lion.mp4\""
+        ],
+        "playlist": [
+          "\"C:\\Users\\RSP.tech Solution\\Downloads\\Doctor-lion.mp4\""
+        ],
+        "inputPath": "\"C:\\Users\\RSP.tech Solution\\Downloads\\Doctor-lion.mp4\"",
+        "rtmpUrl": "rtmp://a.rtmp.youtube.com/live2",
+        "streamKey": "z8h8-juhm-vfy3-88f0-59zg",
+        "destinations": [
+          {
+            "id": "dst_18e9a46af8b8b73d",
+            "name": "Primary YouTube",
+            "role": "PRIMARY",
+            "rtmpUrl": "rtmp://a.rtmp.youtube.com/live2",
+            "streamKey": "z8h8-juhm-vfy3-88f0-59zg"
+          }
+        ],
+        "failover": {
+          "enabled": false,
+          "mode": "PRIMARY_ONLY"
+        },
+        "workerFailover": {
+          "enabled": false,
+          "backupDeviceIds": [],
+          "takeoverAfterSeconds": 30,
+          "autoFailback": true,
+          "leaseGraceSeconds": 25
+        },
+        "leaseId": "lease_33707edf33e4ce3e",
+        "assignmentEpoch": 2,
+        "leaseGraceSeconds": 25,
+        "loop": true,
+        "mode": "copy",
+        "videoBitrateKbps": 4000,
+        "audioBitrateKbps": 128,
+        "startIndex": 0,
+        "branding": {
+          "enabled": false,
+          "imagePath": "",
+          "position": "top-right",
+          "width": 220,
+          "opacity": 0.9
+        },
+        "programmingBlockId": null
+      },
+      "status": "FAILED",
+      "createdAt": "2026-10-20T14:30:36.025Z",
+      "claimedAt": "2026-10-20T14:30:36.792Z",
+      "completedAt": "2026-10-20T14:30:37.233Z",
+      "result": {
+        "ok": false,
+        "error": "Media file not found: \"C:\\Users\\RSP.tech Solution\\Downloads\\Doctor-lion.mp4\""
+      }
+    }
+  ],
+  "events": [
+    {
+      "id": "evt_861c48a849f0b5a0",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "type": "COMMAND_COMPLETED",
+      "detail": {
+        "commandId": "cmd_73d4414a5d7e44fd",
+        "type": "START_STREAM",
+        "ok": false
+      },
+      "createdAt": "2026-10-20T14:32:02.138Z"
+    },
+    {
+      "id": "evt_bc7476fa458e4aa5",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "type": "COMMAND_COMPLETED",
+      "detail": {
+        "commandId": "cmd_2661b9bf1efa3313",
+        "type": "PREFLIGHT_STREAM",
+        "ok": false
+      },
+      "createdAt": "2026-10-20T14:30:37.236Z"
+    },
+    {
+      "id": "evt_73ad2aea70ba4e2a",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "type": "STREAM_PREFLIGHT_REQUESTED",
+      "detail": {
+        "streamId": "str_902550371f255025",
+        "commandIds": [
+          "cmd_2661b9bf1efa3313"
+        ],
+        "workers": 1
+      },
+      "createdAt": "2026-10-20T14:30:36.027Z"
+    },
+    {
+      "id": "evt_22a4258059fa1f9a",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "type": "COMMAND_COMPLETED",
+      "detail": {
+        "commandId": "cmd_051e028c9ccd9140",
+        "type": "FORCE_RECONNECT",
+        "ok": false
+      },
+      "createdAt": "2026-10-20T14:30:26.787Z"
+    },
+    {
+      "id": "evt_824d98e880f795d2",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "type": "STREAM_ITEM_RESTART_REQUESTED",
+      "detail": {
+        "streamId": "str_902550371f255025",
+        "commandId": "cmd_051e028c9ccd9140"
+      },
+      "createdAt": "2026-10-20T14:30:26.119Z"
+    },
+    {
+      "id": "evt_f25d47b534e9dbe6",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "type": "STREAM_START_REQUESTED",
+      "detail": {
+        "streamId": "str_902550371f255025",
+        "commandId": "cmd_73d4414a5d7e44fd",
+        "source": "MANUAL",
+        "deviceId": "dev_588b7b9a92924036",
+        "assignmentEpoch": 2
+      },
+      "createdAt": "2026-10-20T14:29:55.882Z"
+    },
+    {
+      "id": "evt_ce57018961587926",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "type": "STREAM_UPDATED",
+      "detail": {
+        "streamId": "str_902550371f255025",
+        "hotApplied": false
+      },
+      "createdAt": "2026-10-20T14:29:42.422Z"
+    },
+    {
+      "id": "evt_5fae98d7a2905233",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "type": "COMMAND_COMPLETED",
+      "detail": {
+        "commandId": "cmd_41dcc3b4e4956691",
+        "type": "START_STREAM",
+        "ok": false
+      },
+      "createdAt": "2026-10-20T14:28:48.600Z"
+    },
+    {
+      "id": "evt_22cd490c7b68e9c9",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "type": "STREAM_START_REQUESTED",
+      "detail": {
+        "streamId": "str_902550371f255025",
+        "commandId": "cmd_41dcc3b4e4956691",
+        "source": "MANUAL",
+        "deviceId": "dev_588b7b9a92924036",
+        "assignmentEpoch": 1
+      },
+      "createdAt": "2026-10-20T14:28:47.967Z"
+    },
+    {
+      "id": "evt_afd953c0d7780bc3",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "type": "COMMAND_COMPLETED",
+      "detail": {
+        "commandId": "cmd_14f0b110b4779d27",
+        "type": "CAPTURE_PREVIEW",
+        "ok": false
+      },
+      "createdAt": "2026-10-20T14:28:27.794Z"
+    },
+    {
+      "id": "evt_b818031853d82eae",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "type": "COMMAND_COMPLETED",
+      "detail": {
+        "commandId": "cmd_a9de04b73291de6a",
+        "type": "CAPTURE_PREVIEW",
+        "ok": false
+      },
+      "createdAt": "2026-10-20T14:28:25.381Z"
+    },
+    {
+      "id": "evt_f3c5d6dc6d7436c9",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "type": "COMMAND_COMPLETED",
+      "detail": {
+        "commandId": "cmd_6280cff348364e44",
+        "type": "PREFLIGHT_STREAM",
+        "ok": false
+      },
+      "createdAt": "2026-10-20T14:28:23.218Z"
+    },
+    {
+      "id": "evt_cafe58481565eb1b",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "type": "STREAM_PREVIEW_REQUESTED",
+      "detail": {
+        "streamId": "str_902550371f255025",
+        "commandId": "cmd_14f0b110b4779d27"
+      },
+      "createdAt": "2026-10-20T14:28:00.545Z"
+    },
+    {
+      "id": "evt_3faffb9ec44f8c65",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "type": "STREAM_PREVIEW_REQUESTED",
+      "detail": {
+        "streamId": "str_902550371f255025",
+        "commandId": "cmd_a9de04b73291de6a"
+      },
+      "createdAt": "2026-10-20T14:27:58.684Z"
+    },
+    {
+      "id": "evt_7903259404607f56",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "type": "STREAM_PREFLIGHT_REQUESTED",
+      "detail": {
+        "streamId": "str_902550371f255025",
+        "commandIds": [
+          "cmd_6280cff348364e44"
+        ],
+        "workers": 1
+      },
+      "createdAt": "2026-10-20T14:27:56.193Z"
+    },
+    {
+      "id": "evt_d83f3b401f17965f",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "type": "STREAM_CREATED",
+      "detail": {
+        "streamId": "str_902550371f255025",
+        "name": "Test Live",
+        "items": 1
+      },
+      "createdAt": "2026-10-20T14:26:29.932Z"
+    },
+    {
+      "id": "evt_c4c55a87dfc09aef",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "type": "DEVICE_CREATED",
+      "detail": {
+        "deviceId": "dev_588b7b9a92924036",
+        "name": "Home-pc"
+      },
+      "createdAt": "2026-10-20T14:21:09.790Z"
+    },
+    {
+      "id": "evt_f7cd0d345459e8d1",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "type": "OWNER_SETUP",
+      "detail": {
+        "userId": "usr_e815ad4d701e0c05"
+      },
+      "createdAt": "2026-10-20T14:14:37.651Z"
+    }
+  ],
+  "logs": [
+    {
+      "id": "log_ea5be16394487bf4",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "deviceId": "dev_588b7b9a92924036",
+      "streamId": null,
+      "level": "ERROR",
+      "message": "Command failed: Media file not found: \"C:\\Users\\RSP.tech Solution\\Downloads\\Doctor-lion.mp4\"",
+      "createdAt": "2026-10-20T14:32:01.662Z"
+    },
+    {
+      "id": "log_150f5882ef19b8af",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "deviceId": "dev_588b7b9a92924036",
+      "streamId": null,
+      "level": "INFO",
+      "message": "Command START_STREAM (cmd_73d4414a5d7e44fd)",
+      "createdAt": "2026-10-20T14:31:59.872Z"
+    },
+    {
+      "id": "log_d8a0efd546129588",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "deviceId": "dev_588b7b9a92924036",
+      "streamId": null,
+      "level": "WARN",
+      "message": "Could not report command completion: EPERM: operation not permitted, rename 'C:\\Users\\RSP.tech Solution\\Desktop\\stream24\\data\\db.json.tmp' -> 'C:\\Users\\RSP.tech Solution\\Desktop\\stream24\\data\\db.json'",
+      "createdAt": "2026-10-20T14:30:37.270Z"
+    },
+    {
+      "id": "log_9094c101f7b687d5",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "deviceId": "dev_588b7b9a92924036",
+      "streamId": null,
+      "level": "ERROR",
+      "message": "Command failed: Media file not found: \"C:\\Users\\RSP.tech Solution\\Downloads\\Doctor-lion.mp4\"",
+      "createdAt": "2026-10-20T14:30:37.231Z"
+    },
+    {
+      "id": "log_3c8a737a59496519",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "deviceId": "dev_588b7b9a92924036",
+      "streamId": null,
+      "level": "INFO",
+      "message": "Command PREFLIGHT_STREAM (cmd_2661b9bf1efa3313)",
+      "createdAt": "2026-10-20T14:30:36.799Z"
+    },
+    {
+      "id": "log_4d795dcb574a6079",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "deviceId": "dev_588b7b9a92924036",
+      "streamId": null,
+      "level": "ERROR",
+      "message": "Command failed: Stream is not currently running.",
+      "createdAt": "2026-10-20T14:30:26.783Z"
+    },
+    {
+      "id": "log_9bd1be3fcb8f2db1",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "deviceId": "dev_588b7b9a92924036",
+      "streamId": null,
+      "level": "INFO",
+      "message": "Command FORCE_RECONNECT (cmd_051e028c9ccd9140)",
+      "createdAt": "2026-10-20T14:30:26.761Z"
+    },
+    {
+      "id": "log_6952bec775866c6f",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "deviceId": "dev_588b7b9a92924036",
+      "streamId": null,
+      "level": "WARN",
+      "message": "Poll failed: EPERM: operation not permitted, rename 'C:\\Users\\RSP.tech Solution\\Desktop\\stream24\\data\\db.json.tmp' -> 'C:\\Users\\RSP.tech Solution\\Desktop\\stream24\\data\\db.json'",
+      "createdAt": "2026-10-20T14:29:59.212Z"
+    },
+    {
+      "id": "log_c6100d662cd8f84a",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "deviceId": "dev_588b7b9a92924036",
+      "streamId": null,
+      "level": "INFO",
+      "message": "Control server connection restored.",
+      "createdAt": "2026-10-20T14:29:48.284Z"
+    },
+    {
+      "id": "log_1c7aeaa0aab9cdf4",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "deviceId": "dev_588b7b9a92924036",
+      "streamId": null,
+      "level": "INFO",
+      "message": "Stream24 Agent 0.14.0 connecting to http://localhost:3000",
+      "createdAt": "2026-10-20T14:29:47.907Z"
+    },
+    {
+      "id": "log_958793d9ecbd854e",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "deviceId": "dev_588b7b9a92924036",
+      "streamId": null,
+      "level": "ERROR",
+      "message": "Command failed: Media file not found: \"C:\\Users\\RSP.tech Solution\\Downloads\\Untitled_Scene_10-08_15_37_36_20261008210842.mp4\"",
+      "createdAt": "2026-10-20T14:28:48.595Z"
+    },
+    {
+      "id": "log_2defe05e4fdf7504",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "deviceId": "dev_588b7b9a92924036",
+      "streamId": null,
+      "level": "INFO",
+      "message": "Command START_STREAM (cmd_41dcc3b4e4956691)",
+      "createdAt": "2026-10-20T14:28:48.301Z"
+    },
+    {
+      "id": "log_5074e8c76751da5f",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "deviceId": "dev_588b7b9a92924036",
+      "streamId": null,
+      "level": "ERROR",
+      "message": "Command failed: Media file not found: \"C:\\Users\\RSP.tech Solution\\Downloads\\Untitled_Scene_10-08_15_37_36_20261008210842.mp4\"",
+      "createdAt": "2026-10-20T14:28:27.789Z"
+    },
+    {
+      "id": "log_5c26037ebf69cb17",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "deviceId": "dev_588b7b9a92924036",
+      "streamId": null,
+      "level": "INFO",
+      "message": "Command CAPTURE_PREVIEW (cmd_14f0b110b4779d27)",
+      "createdAt": "2026-10-20T14:28:27.770Z"
+    },
+    {
+      "id": "log_6a8cdb1b25871f59",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "deviceId": "dev_588b7b9a92924036",
+      "streamId": null,
+      "level": "ERROR",
+      "message": "Command failed: Media file not found: \"C:\\Users\\RSP.tech Solution\\Downloads\\Untitled_Scene_10-08_15_37_36_20261008210842.mp4\"",
+      "createdAt": "2026-10-20T14:28:25.372Z"
+    },
+    {
+      "id": "log_0f0e8cd5b8d997df",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "deviceId": "dev_588b7b9a92924036",
+      "streamId": null,
+      "level": "INFO",
+      "message": "Command CAPTURE_PREVIEW (cmd_a9de04b73291de6a)",
+      "createdAt": "2026-10-20T14:28:25.346Z"
+    },
+    {
+      "id": "log_0eb283fbf405a2c3",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "deviceId": "dev_588b7b9a92924036",
+      "streamId": null,
+      "level": "ERROR",
+      "message": "Command failed: Media file not found: \"C:\\Users\\RSP.tech Solution\\Downloads\\Untitled_Scene_10-08_15_37_36_20261008210842.mp4\"",
+      "createdAt": "2026-10-20T14:28:23.209Z"
+    },
+    {
+      "id": "log_a9514586af3160c6",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "deviceId": "dev_588b7b9a92924036",
+      "streamId": null,
+      "level": "INFO",
+      "message": "Command PREFLIGHT_STREAM (cmd_6280cff348364e44)",
+      "createdAt": "2026-10-20T14:28:22.752Z"
+    },
+    {
+      "id": "log_70a593d10ff1ed52",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "deviceId": "dev_588b7b9a92924036",
+      "streamId": null,
+      "level": "INFO",
+      "message": "Control server connection restored.",
+      "createdAt": "2026-10-20T14:28:22.728Z"
+    },
+    {
+      "id": "log_0c9d2b44cfe1febf",
+      "ownerId": "usr_e815ad4d701e0c05",
+      "deviceId": "dev_588b7b9a92924036",
+      "streamId": null,
+      "level": "INFO",
+      "message": "Stream24 Agent 0.14.0 connecting to http://localhost:3000",
+      "createdAt": "2026-10-20T14:28:22.416Z"
+    }
+  ],
+  "media": [],
+  "templates": [],
+  "youtubeConnections": [],
+  "youtubeOauthStates": [],
+  "mediaCatalog": [],
+  "replicationJobs": [],
+  "retentionPolicies": []
+}
