@@ -150,14 +150,15 @@ const requestHandler=async(req,res)=>{for(const [k,v] of Object.entries(security
     if(req.method==='GET'&&p==='/api/media/uploads'){
       const configuredRoot=String(process.env.STREAM24_MEDIA_ROOT||'').trim();
       if(!configuredRoot)return sendJson(res,200,{enabled:false,items:[]});
-      return sendJson(res,200,{enabled:true,maxUploadBytes:Math.max(1,Number(process.env.STREAM24_MAX_UPLOAD_BYTES||5368709120)),items:listUploadedVideos({root:path.resolve(configuredRoot),ownerId:user.id})});
+      const configuredLimit=Number(process.env.STREAM24_MAX_UPLOAD_BYTES||5368709120),maxUploadBytes=Number.isFinite(configuredLimit)&&configuredLimit>0?Math.floor(configuredLimit):5368709120;
+      return sendJson(res,200,{enabled:true,maxUploadBytes,items:listUploadedVideos({root:path.resolve(configuredRoot),ownerId:user.id})});
     }
     if(req.method==='POST'&&p==='/api/media/upload'){
       const configuredRoot=String(process.env.STREAM24_MEDIA_ROOT||'').trim();
       if(!configuredRoot)return sendJson(res,503,{error:'Cloud uploads are disabled. Configure STREAM24_MEDIA_ROOT on the server and mount the same persistent directory into the worker.'});
       const type=String(req.headers['content-type']||'').split(';')[0].trim().toLowerCase();
       if(!['application/octet-stream','video/mp4','video/quicktime','video/webm','video/x-matroska','video/mpeg','video/mp2t','video/x-msvideo'].includes(type))return sendJson(res,415,{error:'Send a video file using application/octet-stream.'});
-      const maxBytes=Math.max(1,Number(process.env.STREAM24_MAX_UPLOAD_BYTES||5368709120));
+      const configuredLimit=Number(process.env.STREAM24_MAX_UPLOAD_BYTES||5368709120),maxBytes=Number.isFinite(configuredLimit)&&configuredLimit>0?Math.floor(configuredLimit):5368709120;
       const uploaded=await saveUploadedVideo(req,{root:path.resolve(configuredRoot),ownerId:user.id,maxBytes});
       event('MEDIA_UPLOADED',{name:uploaded.name,sizeBytes:uploaded.sizeBytes},user.id);
       return sendJson(res,201,{ok:true,...uploaded});
