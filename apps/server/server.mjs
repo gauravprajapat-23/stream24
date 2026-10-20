@@ -131,6 +131,7 @@ const requestHandler=async(req,res)=>{for(const [k,v] of Object.entries(security
     const user=requireUser(req,res);if(!user)return;
     if(req.method==='GET'&&p==='/api/billing/summary'){const summary=entitlementSummary(store.data,user.id);return sendJson(res,200,{enforced:billingIsEnforced(),...summary,orders:store.data.billingOrders.filter(o=>o.ownerId===user.id).map(o=>({id:o.id,planId:o.planId,amountPaise:o.amountPaise,currency:o.currency,status:o.status,createdAt:o.createdAt,paidAt:o.paidAt||null})),subscriptions:store.data.billingSubscriptions.filter(s=>s.ownerId===user.id).map(s=>({id:s.id,planId:s.planId,status:s.status,createdAt:s.createdAt,providerSubscriptionId:s.providerSubscriptionId}))});}
     if(req.method==='POST'&&p==='/api/billing/orders'){
+      const billingOrderLimit=authLimiter.check(`billing-order:${user.id}`,{limit:10,windowMs:60000});if(!billingOrderLimit.ok)return sendJson(res,429,{error:'Too many checkout attempts. Please wait before trying again.'});
       if(!String(process.env.RAZORPAY_WEBHOOK_SECRET||'').trim())return sendJson(res,503,{error:'Payment checkout is disabled until RAZORPAY_WEBHOOK_SECRET is configured.'});
       const b=await readJson(req),plan=getPlan(String(b.planId||''));if(!plan||plan.kind!=='pass')return sendJson(res,400,{error:'Choose a valid 24-hour pass plan.'});
       const providerOrder=await createRazorpayOrder({plan,ownerId:user.id});
@@ -139,6 +140,7 @@ const requestHandler=async(req,res)=>{for(const [k,v] of Object.entries(security
       return sendJson(res,201,{keyId:String(process.env.RAZORPAY_KEY_ID||''),orderId:providerOrder.id,amount:providerOrder.amount,currency:providerOrder.currency,plan:{id:plan.id,name:plan.name,maxConcurrentStreams:plan.maxConcurrentStreams,durationHours:24}});
     }
     if(req.method==='POST'&&p==='/api/billing/subscriptions'){
+      const billingSubscriptionLimit=authLimiter.check(`billing-subscription:${user.id}`,{limit:5,windowMs:3600000});if(!billingSubscriptionLimit.ok)return sendJson(res,429,{error:'Too many subscription attempts. Please try again later.'});
       if(!String(process.env.RAZORPAY_WEBHOOK_SECRET||'').trim())return sendJson(res,503,{error:'Subscription checkout is disabled until RAZORPAY_WEBHOOK_SECRET is configured.'});
       const b=await readJson(req),plan=getPlan(String(b.planId||''));if(!plan||plan.kind!=='monthly')return sendJson(res,400,{error:'Choose a configured monthly subscription plan.'});
       const providerSubscription=await createRazorpaySubscription({plan,ownerId:user.id});
