@@ -218,3 +218,7 @@ The `feat/cloud-vps-worker` branch adds a single-VPS deployment with Docker Comp
 See [Cloud VPS deployment](docs/CLOUD_VPS_DEPLOYMENT.md) for deployment, HTTPS, worker-token setup, upload limits, and production acceptance checks. The cloud upload UI requires `STREAM24_MEDIA_ROOT` to be configured and mounted into both the server and worker containers. Test with a private/unlisted YouTube broadcast before public use.
 
 A zero-monthly-fee trial path using an eligible Oracle Cloud Always Free VM is documented in [Free cloud VM deployment](docs/CLOUD_FREE_VM_DEPLOYMENT.md). Free-tier capacity and billing eligibility must be verified in the Oracle console; test one stream before attempting two or three.
+
+## SaaS subscriptions and scale plan
+
+The proposed multi-tenant subscription architecture, ₹30/24-hour single-stream and ₹99/24-hour five-stream pass model, worker-fleet design, and rollout/cost guardrails are documented in [SaaS subscriptions and scaling](docs/SAAS_SUBSCRIPTIONS_AND_SCALING.md). This is a design/rollout plan, not a claim that payment processing or 1,000-customer capacity is implemented yet.
