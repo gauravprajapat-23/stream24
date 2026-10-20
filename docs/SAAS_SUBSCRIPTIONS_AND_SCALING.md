@@ -10,7 +10,7 @@ Stream24 can become a multi-tenant SaaS with one account per customer, self-serv
 
 The first server-side billing phase is implemented as an opt-in integration on the existing single-node JSON store. It includes the fixed ₹30/₹99 day-pass catalog, configurable monthly plan IDs/prices, server-created Razorpay orders/subscriptions, raw-body HMAC-SHA256 webhook verification, event-ID and payment-ID idempotency, entitlement records, account-wide concurrent-stream checks, and periodic expiry/limit enforcement. Tests cover these core billing rules.
 
-**This is not a live payment integration or a production multi-tenant billing launch.** No merchant credentials have been supplied/configured, no real Razorpay webhook has been received, and there is not yet a complete customer checkout/billing UI. The JSON store is still single-process and is not safe for horizontally scaled SaaS; migrate billing and stream reservations to transactional PostgreSQL before multi-instance or high-concurrency production use.
+**This is not a live payment integration or a production multi-tenant billing launch.** No merchant credentials have been supplied/configured, no real Razorpay webhook has been received, and a basic Billing view that launches Razorpay Checkout is now present. Public SaaS signup/email verification, receipt/refund UI, full reconciliation/admin tooling, and a production-grade billing interface remain outstanding. The JSON store is still single-process and is not safe for horizontally scaled SaaS; migrate billing and stream reservations to transactional PostgreSQL before multi-instance or high-concurrency production use.
 
 ### Billing API surface
 
