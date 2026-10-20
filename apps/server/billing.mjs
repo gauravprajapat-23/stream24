@@ -242,7 +242,7 @@ export function createRazorpayOrder({ plan, ownerId, env = process.env, fetchImp
   });
 }
 
-export function createRazorpaySubscription({ plan, ownerId, env = process.env, fetchImpl = fetch }) {
+export async function createRazorpaySubscription({ plan, ownerId, env = process.env, fetchImpl = fetch }) {
   const keyId = String(env.RAZORPAY_KEY_ID || '').trim();
   const keySecret = String(env.RAZORPAY_KEY_SECRET || '').trim();
   if (!keyId || !keySecret) {
@@ -255,12 +255,22 @@ export function createRazorpaySubscription({ plan, ownerId, env = process.env, f
     error.statusCode = 503;
     throw error;
   }
-  return fetchImpl('https://api.razorpay.com/v1/subscriptions', {
+  const headers = {
+    authorization: `Basic ${Buffer.from(`${keyId}:${keySecret}`).toString('base64')}`,
+    'content-type': 'application/json'
+  };
+  const planResponse = await fetchImpl(`https://api.razorpay.com/v1/plans/${encodeURIComponent(plan.providerPlanId)}`, { method: 'GET', headers });
+  const providerPlan = await planResponse.json().catch(() => ({}));
+  if (!planResponse.ok || Number(providerPlan.item?.amount) !== plan.amountPaise
+    || String(providerPlan.item?.currency || '') !== plan.currency
+    || String(providerPlan.period || '') !== 'monthly' || Number(providerPlan.interval) !== 1) {
+    const error = new Error('The configured Razorpay plan must be a monthly plan whose amount and currency exactly match Stream24 configuration.');
+    error.statusCode = 409;
+    throw error;
+  }
+  const response = await fetchImpl('https://api.razorpay.com/v1/subscriptions', {
     method: 'POST',
-    headers: {
-      authorization: `Basic ${Buffer.from(`${keyId}:${keySecret}`).toString('base64')}`,
-      'content-type': 'application/json'
-    },
+    headers,
     body: JSON.stringify({
       plan_id: plan.providerPlanId,
       total_count: 1200,
@@ -268,13 +278,12 @@ export function createRazorpaySubscription({ plan, ownerId, env = process.env, f
       customer_notify: true,
       notes: { ownerId, planId: plan.id }
     })
-  }).then(async response => {
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok || !body.id) {
-      const error = new Error('Razorpay subscription creation failed.');
-      error.statusCode = 502;
-      throw error;
-    }
-    return { id: body.id, status: body.status || 'created', shortUrl: body.short_url || null };
   });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok || !body.id) {
+    const error = new Error('Razorpay subscription creation failed.');
+    error.statusCode = 502;
+    throw error;
+  }
+  return { id: body.id, status: body.status || 'created', shortUrl: body.short_url || null };
 }
