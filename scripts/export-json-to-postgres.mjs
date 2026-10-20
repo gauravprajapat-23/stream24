@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const SQL_TEXT_LIMIT = 1_000_000;
+const MAX_RECORD_CHARS = 100 * 1024 * 1024;
 
 function sqlText(value) {
   return `'${String(value).replace(/'/g, "''")}'`;
@@ -43,7 +43,7 @@ export function generatePostgresImportSql(db) {
       const id = stableRecordId(collection, record);
       const ownerId = record.ownerId ?? record.userId ?? null;
       const payload = JSON.stringify(record);
-      if (payload.length > SQL_TEXT_LIMIT * 100) {
+      if (payload.length > MAX_RECORD_CHARS) {
         throw new Error(`Record in ${collection} is too large for a safe migration snapshot.`);
       }
       lines.push(
