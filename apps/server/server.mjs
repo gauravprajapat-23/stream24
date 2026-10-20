@@ -18,6 +18,7 @@ import { agentTokenHash, isSameOrigin, RateLimiter, requestIp, securityHeaders, 
 import { createEncryptedBackup, openEncryptedBackup, sanitizeRestoredDb } from './backup.mjs';
 import { setupChecklist, checklistProgress } from './setup.mjs';
 import { fetchUpdateManifest, compareVersions } from './update.mjs';
+import { saveUploadedVideo, listUploadedVideos } from './uploads.mjs';
 
 const here=path.dirname(fileURLToPath(import.meta.url)),root=path.resolve(here,'../..');
 const store=new JsonStore(path.join(root,'data','db.json'));const port=Number(process.env.PORT||3000),host=process.env.HOST||'0.0.0.0';
@@ -146,6 +147,21 @@ const requestHandler=async(req,res)=>{for(const [k,v] of Object.entries(security
     if(req.method==='GET'&&p==='/api/update/status'){const url=String(process.env.STREAM24_UPDATE_MANIFEST_URL||'').trim();if(!url)return sendJson(res,200,{configured:false,currentVersion:VERSION,updateAvailable:false});try{const r=await fetchUpdateManifest(url);const m=r.manifest;return sendJson(res,200,{configured:true,currentVersion:VERSION,manifest:m,updateAvailable:compareVersions(VERSION,m.version)<0});}catch(e){return sendJson(res,200,{configured:true,currentVersion:VERSION,updateAvailable:false,error:e.message});}}
     if(req.method==='GET'&&p==='/api/backup/export'){const bundle=createEncryptedBackup(store.data,masterKey,{version:VERSION});event('BACKUP_EXPORTED',{version:VERSION},user.id);res.setHeader('content-disposition',`attachment; filename=stream24-backup-${new Date().toISOString().slice(0,10)}.json`);return sendJson(res,200,bundle);}
     if(req.method==='POST'&&p==='/api/backup/restore'){const b=await readJson(req,20*1024*1024);if(String(b.confirm||'')!=='RESTORE')return sendJson(res,400,{error:'Type RESTORE to confirm disaster recovery restore.'});const parsed=openEncryptedBackup(b.backup,masterKey);const restored=sanitizeRestoredDb(parsed.data,Object.keys(EMPTY_DB));store.data=restored;store.persist();const restoredUser=store.data.users.find(x=>x.email===user.email)||store.data.users[0];if(restoredUser)event('BACKUP_RESTORED',{backupVersion:parsed.version||null,backupCreatedAt:parsed.createdAt||null},restoredUser.id);return sendJson(res,200,{ok:true,backupVersion:parsed.version||null,backupCreatedAt:parsed.createdAt||null});}
+    if(req.method==='GET'&&p==='/api/media/uploads'){
+      const configuredRoot=String(process.env.STREAM24_MEDIA_ROOT||'').trim();
+      if(!configuredRoot)return sendJson(res,200,{enabled:false,items:[]});
+      return sendJson(res,200,{enabled:true,maxUploadBytes:Math.max(1,Number(process.env.STREAM24_MAX_UPLOAD_BYTES||5368709120)),items:listUploadedVideos({root:path.resolve(configuredRoot),ownerId:user.id})});
+    }
+    if(req.method==='POST'&&p==='/api/media/upload'){
+      const configuredRoot=String(process.env.STREAM24_MEDIA_ROOT||'').trim();
+      if(!configuredRoot)return sendJson(res,503,{error:'Cloud uploads are disabled. Configure STREAM24_MEDIA_ROOT on the server and mount the same persistent directory into the worker.'});
+      const type=String(req.headers['content-type']||'').split(';')[0].trim().toLowerCase();
+      if(!['application/octet-stream','video/mp4','video/quicktime','video/webm','video/x-matroska','video/mpeg','video/mp2t','video/x-msvideo'].includes(type))return sendJson(res,415,{error:'Send a video file using application/octet-stream.'});
+      const maxBytes=Math.max(1,Number(process.env.STREAM24_MAX_UPLOAD_BYTES||5368709120));
+      const uploaded=await saveUploadedVideo(req,{root:path.resolve(configuredRoot),ownerId:user.id,maxBytes});
+      event('MEDIA_UPLOADED',{name:uploaded.name,sizeBytes:uploaded.sizeBytes},user.id);
+      return sendJson(res,201,{ok:true,...uploaded});
+    }
     if(req.method==='GET'&&p==='/api/media/reconciliation')return sendJson(res,200,{health:reconciliationForOwner(user.id),candidates:cleanupCandidates({ownerId:user.id,catalog:store.data.mediaCatalog,streams:store.data.streams,templates:store.data.templates,retentionDays:(store.data.retentionPolicies.find(x=>x.ownerId===user.id)?.retentionDays||7)})});
     if(req.method==='POST'&&p==='/api/media/reconcile'){reconciliationTick();return sendJson(res,202,{ok:true,health:reconciliationForOwner(user.id)});}
     if(req.method==='POST'&&p==='/api/media/cleanup'){const b=await readJson(req),policy=store.data.retentionPolicies.find(x=>x.ownerId===user.id)||{ownerId:user.id,retentionDays:7};policy.retentionDays=Math.max(1,Math.min(365,Number(b.retentionDays||policy.retentionDays||7)));if(!store.data.retentionPolicies.some(x=>x.ownerId===user.id))store.data.retentionPolicies.push(policy);const candidates=cleanupCandidates({ownerId:user.id,catalog:store.data.mediaCatalog,streams:store.data.streams,templates:store.data.templates,retentionDays:policy.retentionDays});if(b.apply===true){const grouped=new Map();for(const c of candidates){if(!grouped.has(c.deviceId))grouped.set(c.deviceId,[]);grouped.get(c.deviceId).push(c.localPath);}const commands=[];for(const [deviceId,paths] of grouped){const d=store.data.devices.find(x=>x.id===deviceId&&x.ownerId===user.id);if(!d||!paths.length)continue;const cmd=enqueue(deviceId,'DELETE_MEDIA',{paths,reason:'RETENTION_CLEANUP'});commands.push(cmd.id);}event('MEDIA_CLEANUP_QUEUED',{count:candidates.length,commands},user.id);store.persist();return sendJson(res,202,{ok:true,count:candidates.length,commandIds:commands});}store.persist();return sendJson(res,200,{ok:true,retentionDays:policy.retentionDays,candidates});}
