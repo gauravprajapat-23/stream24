@@ -31,7 +31,7 @@ test('publishes the requested 24-hour pass prices and separate configured monthl
   assert.equal(PASS_PLANS['pass-single'].maxConcurrentStreams, 1);
   assert.equal(PASS_PLANS['pass-five'].amountPaise, 9900);
   assert.equal(PASS_PLANS['pass-five'].maxConcurrentStreams, 5);
-  assert.equal(getPlan('monthly-single', {}).amountPaise, undefined);
+  assert.equal(getPlan('monthly-single', {}), null);
   assert.equal(getPlan('monthly-single', env).amountPaise, 49900);
   assert.equal(getPlan('monthly-five', env).maxConcurrentStreams, 5);
   assert.ok(listPlans(env).some(p => p.id === 'monthly-single' && p.recurring));
