@@ -23,10 +23,10 @@ const percentile = (values, p) => {
   if (!sorted.length) return null;
   return sorted[Math.min(sorted.length - 1, Math.ceil(p * sorted.length) - 1)];
 };
-const cpu = samples.map((s) => Number(s.cpuUsedPercent)).filter(Number.isFinite);
-const memory = samples.map((s) => Number(s.memoryUsedPercent)).filter(Number.isFinite);
-const txMbps = samples.map((s) => Number(s.networkTxBytesPerSecond) * 8 / 1e6).filter(Number.isFinite);
-const txTotals = samples.map((s) => Number(s.networkTxBytesTotal)).filter(Number.isFinite);
+const cpu = samples.filter((s) => s.cpuUsedPercent != null).map((s) => Number(s.cpuUsedPercent)).filter(Number.isFinite);
+const memory = samples.filter((s) => s.memoryUsedPercent != null).map((s) => Number(s.memoryUsedPercent)).filter(Number.isFinite);
+const txMbps = samples.filter((s) => s.networkTxBytesPerSecond != null).map((s) => Number(s.networkTxBytesPerSecond) * 8 / 1e6).filter(Number.isFinite);
+const txTotals = samples.filter((s) => s.networkTxBytesTotal != null).map((s) => Number(s.networkTxBytesTotal)).filter(Number.isFinite);
 const maxCpu = option('--max-cpu', 70);
 const maxMemory = option('--max-memory', 80);
 const networkMbps = option('--network-mbps', 1000);
