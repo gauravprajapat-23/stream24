@@ -2,7 +2,6 @@ import fs from 'node:fs';
 import http from 'node:http';
 import https from 'node:https';
 import path from 'node:path';
-import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { FfmpegRunner, ffmpegAvailable } from './ffmpeg.mjs';
 import { ffprobeAvailable, validatePlaylist, normalizeMedia, persistentPlaylistCompatible, capturePreview, syncMediaItems, syncMediaItemsWithProgress } from './media.mjs';
