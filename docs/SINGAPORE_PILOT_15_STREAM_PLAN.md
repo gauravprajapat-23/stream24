@@ -190,3 +190,40 @@ A running FFmpeg process alone is not proof of a healthy broadcast. Confirm dest
 - Do not enable billing enforcement against real customers until test-mode end-to-end verification is complete.
 - Do not promise 15 simultaneous 24/7 streams on the ₹1,500 pilot budget.
 - Do not use customer-owned workers as shared infrastructure without an explicit tenant-isolation and authorization redesign.
+
+
+## Phase 0 implementation — worker telemetry and capacity reports
+
+The pilot branch now samples host CPU utilization, memory utilization, Node agent RSS/heap, load average and Linux network RX/TX counters. CPU and network rates are calculated from deltas between samples; the first sample intentionally reports null rates until a baseline exists. Non-Linux workers report unavailable network counters rather than fabricating values.
+
+The authenticated worker heartbeat stores the latest metrics and a bounded 30-second history (up to 10,080 samples, approximately 84 hours). The owner-authenticated API endpoint is:
+
+```http
+GET /api/devices/:deviceId/metrics?hours=24
+```
+
+The endpoint returns `current` and `samples`; it does not expose worker tokens. The normal `GET /api/devices` response omits the history to avoid large dashboard payloads.
+
+### Capacity commands
+
+Calculate expected egress without starting a stream:
+
+```bash
+npm run capacity:plan -- --streams 15 --video-kbps 4500 --audio-kbps 128 --hours-per-day 24 --days 30 --headroom-percent 15
+```
+
+Export worker telemetry from the authenticated metrics endpoint to a JSON file containing the returned `samples` array, then evaluate it:
+
+```bash
+npm run capacity:report -- ./worker-metrics.json --network-mbps 1000 --max-cpu 70 --max-memory 80 --min-hours 24
+```
+
+For the 15-stream production acceptance run, use `--min-hours 72`. The report checks p95 CPU, p95 memory, p95 network TX against 80% of the configured port rate, and minimum soak duration. A passing report is only one acceptance input: destination-side live status, FFmpeg progress, restart/reconnect counts and provider transfer allowance must also be verified.
+
+### Current limits
+
+- Metrics are per worker host, not per individual stream or customer.
+- Linux `/proc` provides network counters; Windows network rates remain null until a platform-specific counter provider is added.
+- The existing worker agent still runs one FFmpeg stream at a time. This phase does not claim multi-stream-per-agent support.
+- The current JSON store retains telemetry only on a single server instance; this history is not a substitute for a durable time-series database at larger scale.
+- No real Singapore VPS load test has been performed by this code change. The 15-stream target remains unverified.
