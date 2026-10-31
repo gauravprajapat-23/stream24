@@ -81,7 +81,6 @@ See `docs/PHASE5.md` for implementation notes and current limitations.
 
 See `docs/PHASE6.md`.
 
-
 ## Phase 7 additions
 
 - Optional YouTube OAuth / Data API v3 connection
@@ -92,7 +91,6 @@ See `docs/PHASE6.md`.
 - Manual RTMP remains available with no Google OAuth setup
 
 See `docs/PHASE7.md`.
-
 
 ## Phase 8 additions
 
@@ -130,7 +128,6 @@ Run **Preflight** after configuring backups. Phase 12 sends the media preflight 
 
 See `docs/PHASE9.md`.
 
-
 ## Phase 12 — per-worker media mapping and LAN replication
 
 Phase 12 removes the identical-drive-letter requirement for failover workers. A stream keeps canonical media paths, while each worker can translate a canonical root to its own local root. Backup mappings can also define a Windows/LAN share source.
@@ -138,11 +135,10 @@ Phase 12 removes the identical-drive-letter requirement for failover workers. A 
 Example backup mapping:
 
 ```text
-D:\Stream24\media | E:\S24\media | \\PRIMARY-PC\Stream24\media
+D:\Stream24\media | E:\S24\media | \\\\PRIMARY-PC\\Stream24\\media
 ```
 
 Use **Workers → Media path mappings** to configure mappings. With a stream stopped, use **Replicate media** to queue verified copies to configured backup workers. Copies use a temporary file and SHA-256 verification before becoming active. Run Preflight afterward to certify each backup against its translated local paths.
-
 
 ## Phase 12 additions
 
@@ -155,8 +151,8 @@ Use **Workers → Media path mappings** to configure mappings. With a stream sto
 
 Configure `watchFolders` and `watchScanIntervalMs` in each worker's `apps/agent/config.json`. See `docs/PHASE11.md`.
 
-
 ## Phase 12 additions
+
 - Backup health score (0-100)
 - Automatic reconciliation/repair of missing or checksum-stale backup media
 - Safe retention preview and worker-side cleanup of unreferenced old files
@@ -186,13 +182,11 @@ powershell -ExecutionPolicy Bypass -File .\scripts\windows\setup-stream24.ps1 -M
 
 This copies Stream24 to `%LOCALAPPDATA%\Stream24`, generates a production master key if needed, writes worker configuration, and can install resilient Task Scheduler startup jobs. See `docs/PHASE14.md`.
 
-
 ## LAN transport security
 
 For workers on another PC, Stream24 now refuses plain `http://` LAN control URLs by default because worker tokens and RTMP credentials would otherwise travel in plaintext. Prefer native HTTPS by setting `STREAM24_TLS_CERT_PATH` and `STREAM24_TLS_KEY_PATH` to PEM certificate/key files on the server, then use an `https://...` worker URL. If you intentionally accept plaintext on a trusted LAN, set `allowInsecureLan: true` in that worker's `config.json` (or pass `-AllowInsecureLan` to the Windows setup script).
 
 First-run owner creation is restricted to the server PC by default. `STREAM24_ALLOW_REMOTE_SETUP=1` is an explicit escape hatch and should normally remain disabled.
-
 
 ### Free local HTTPS setup
 
@@ -210,7 +204,6 @@ powershell -ExecutionPolicy Bypass -File .\scripts\windows\setup-stream24.ps1 -M
 
 For a second worker PC, copy only `data\tls\ca-cert.pem` from the server PC and pass its path as `-CaCertPath`; do not copy the CA private key.
 
-
 ## Cloud VPS mode (Option A)
 
 The `feat/cloud-vps-worker` branch adds a single-VPS deployment with Docker Compose, a persistent Linux FFmpeg worker, shared video storage, and authenticated browser uploads. This lets a stream continue after your own PC is switched off, provided the VPS and its worker remain running.
@@ -222,3 +215,5 @@ A zero-monthly-fee trial path using an eligible Oracle Cloud Always Free VM is d
 ## SaaS subscriptions and scale plan
 
 The SaaS billing foundation now includes the ₹30/24-hour single-stream and ₹99/24-hour five-stream pass catalog, configurable monthly Razorpay plans, server-created checkout requests, signature-verified/idempotent webhooks, server-side entitlement enforcement, and a basic Billing view. Setup and limitations are documented in [SaaS subscriptions and scaling](docs/SAAS_SUBSCRIPTIONS_AND_SCALING.md) and [Cloud VPS deployment](docs/CLOUD_VPS_DEPLOYMENT.md). PostgreSQL migration preparation (schema, atomic reservation functions, and JSON export tooling) is documented in [PostgreSQL migration preparation](docs/POSTGRES_MIGRATION.md); the running server still uses JSON and has not cut over. Payments are **not live** until merchant credentials and webhook delivery are configured and tested; PostgreSQL runtime cutover, public SaaS onboarding, and scalable worker infrastructure remain production blockers.
+
+The Singapore pilot budget, 15-stream capacity calculations, worker-fleet requirements, proposed monthly pricing and production acceptance gates are documented in [Singapore pilot and 15-stream scale plan](docs/SINGAPORE_PILOT_15_STREAM_PLAN.md).
