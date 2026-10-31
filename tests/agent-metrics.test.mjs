@@ -27,7 +27,7 @@ test('samples CPU and network deltas without negative rates', () => {
   const first = sampler.sample(1000);
   assert.equal(first.cpuUsedPercent, null);
   assert.equal(first.networkTxBytesPerSecond, null);
-  cpu = 'cpu 200 0 100 900 0 0 0 0 0 0';
+  cpu = 'cpu 200 0 50 900 0 0 0 0 0 0';
   net = 'eth0: 1100 0 0 0 0 0 0 0 2400 0 0 0 0 0 0 0';
   const second = sampler.sample(2000);
   assert.equal(second.cpuUsedPercent, 50);
