@@ -18,22 +18,35 @@ A zero-cloud-cost 24/7 YouTube streaming control plane that uses your own Window
 
 ## Requirements
 
-- Node.js 20+
+- Node.js 20.19+ (Node.js 22 LTS recommended)
 - Windows for the provided worker scripts (the Node agent itself is portable)
 - FFmpeg + FFprobe
 - A YouTube Live stream key
 
-## Run
+## Run (Windows / PowerShell)
+
+Use Node.js 20.19+ (Node.js 22 LTS recommended). Configure the server master key in a root `.env` file beside `package.json`. The server scripts load this file automatically; do not commit it.
 
 ```powershell
-npm run keygen
-$env:APP_MASTER_KEY="PASTE_THE_GENERATED_KEY"
+$key = node .\scripts\generate-master-key.mjs | Select-Object -Last 1
+"APP_MASTER_KEY=$($key.Trim())" | Set-Content -Encoding ascii .env
+npm run doctor
 npm run server
 ```
 
-Open `http://localhost:3000`, create the local owner account, then create a worker.
+Open `http://localhost:3000`, create the local owner account, then create a worker in **Workers** and copy its token.
 
-Configure the agent:
+Install FFmpeg and FFprobe (no winget required):
+
+```powershell
+npm run install:ffmpeg
+# Close and reopen PowerShell, then verify:
+ffmpeg -version
+ffprobe -version
+npm run doctor
+```
+
+Configure the agent using the token copied from the dashboard:
 
 ```powershell
 Copy-Item .\apps\agent\config.example.json .\apps\agent\config.json
@@ -41,11 +54,11 @@ notepad .\apps\agent\config.json
 npm run agent
 ```
 
-If FFmpeg is missing:
+Replace `PASTE_WORKER_TOKEN_HERE` with the worker token. Keep `serverUrl` as `http://localhost:3000` for a worker running on the same PC. For another PC, use the server's HTTPS URL or explicitly enable `allowInsecureLan` only on a trusted LAN. The agent validates its JSON config and reports missing FFmpeg/FFprobe in its startup output and heartbeat.
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\windows\install-ffmpeg.ps1
-```
+If port 3000 is already in use, run `npm run doctor` to identify the owning PID. Do not terminate an unknown process; stop it only after confirming it is an old Stream24 server, or set a different `PORT` in `.env`.
+
+The root `.env`, `apps/agent/config.json`, database, and generated logs contain secrets or private runtime data and must never be committed.
 
 ## Playlist workflow
 
