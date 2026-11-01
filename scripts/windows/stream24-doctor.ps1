@@ -7,10 +7,10 @@ function Add-Check([string]$Name,[string]$Status,[string]$Detail) {
 $node = Get-Command node -ErrorAction SilentlyContinue
 if ($node) {
   $nodeVersion = (node --version 2>$null).Trim()
-  $major = 0
-  if ($nodeVersion -match '^v?(\d+)') { $major = [int]$Matches[1] }
-  Add-Check 'Node.js 20+' $(if($major -ge 20){'PASS'}else{'FAIL'}) $nodeVersion
-} else { Add-Check 'Node.js 20+' 'FAIL' 'Not found on PATH; install Node.js 20 or newer.' }
+  $parsed = [version]($nodeVersion -replace '^v','')
+  $supported = $parsed -ge [version]'20.19.0'
+  Add-Check 'Node.js 20.19+' $(if($supported){'PASS'}else{'FAIL'}) $nodeVersion
+} else { Add-Check 'Node.js 20.19+' 'FAIL' 'Not found on PATH; install Node.js 20.19+ (Node.js 22 LTS recommended).' }
 
 $ffmpeg = Get-Command ffmpeg -ErrorAction SilentlyContinue
 $ffprobe = Get-Command ffprobe -ErrorAction SilentlyContinue
