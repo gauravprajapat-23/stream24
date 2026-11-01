@@ -12,10 +12,38 @@ const VERSION='0.14.0';
 const here=path.dirname(fileURLToPath(import.meta.url));
 const configPath=process.env.STREAM24_AGENT_CONFIG||path.join(here,'config.json');
 if(!fs.existsSync(configPath)){console.error(`Missing ${configPath}. Copy config.example.json to config.json and fill in the device token.`);process.exit(1);}
-const config=JSON.parse(fs.readFileSync(configPath,'utf8'));
-const api=String(config.serverUrl||'http://localhost:3000').replace(/\/$/,'');
-const apiUrl=new URL(api);const loopbackHosts=new Set(['localhost','127.0.0.1','::1']);if(apiUrl.protocol==='http:'&&!loopbackHosts.has(apiUrl.hostname)&&config.allowInsecureLan!==true){console.error('Refusing insecure remote control connection over HTTP. Use HTTPS or set allowInsecureLan=true explicitly for a trusted LAN.');process.exit(1);}if(apiUrl.protocol==='http:'&&!loopbackHosts.has(apiUrl.hostname)&&config.allowInsecureLan===true)console.warn('WARNING: worker token and stream credentials will travel over plaintext HTTP on this LAN connection.');
-const token=config.agentToken,ffmpegBinary=config.ffmpegPath||'ffmpeg',ffprobeBinary=config.ffprobePath||'ffprobe';
+let config;
+try {
+  config=JSON.parse(fs.readFileSync(configPath,'utf8').replace(/^\uFEFF/,''));
+} catch (err) {
+  console.error(`Invalid worker config at ${configPath}: ${err.message}`);
+  process.exit(1);
+}
+if (!config || typeof config !== 'object' || Array.isArray(config)) {
+  console.error(`Invalid worker config at ${configPath}: expected a JSON object.`);
+  process.exit(1);
+}
+const token=String(config.agentToken||'').trim();
+if (!token || token==='PASTE_WORKER_TOKEN_HERE') {
+  console.error('Worker token is missing. Create a worker in the dashboard and paste its token into apps/agent/config.json.');
+  process.exit(1);
+}
+const api=String(config.serverUrl||'http://localhost:3000').trim().replace(/\/$/,'');
+let apiUrl;
+try { apiUrl=new URL(api); } catch { console.error(`Invalid serverUrl in ${configPath}: ${api}`); process.exit(1); }
+if (!['http:','https:'].includes(apiUrl.protocol)) {
+  console.error('serverUrl must use http:// or https://.');
+  process.exit(1);
+}
+const loopbackHosts=new Set(['localhost','127.0.0.1','::1']);
+if(apiUrl.protocol==='http:'&&!loopbackHosts.has(apiUrl.hostname)&&config.allowInsecureLan!==true){
+  console.error('Refusing insecure remote control connection over HTTP. Use HTTPS or set allowInsecureLan=true explicitly for a trusted LAN.');
+  process.exit(1);
+}
+if(apiUrl.protocol==='http:'&&!loopbackHosts.has(apiUrl.hostname)&&config.allowInsecureLan===true)console.warn('WARNING: worker token and stream credentials will travel over plaintext HTTP on this LAN connection.');
+const ffmpegBinary=String(config.ffmpegPath||'ffmpeg').trim(),ffprobeBinary=String(config.ffprobePath||'ffprobe').trim();
+if (!ffmpegAvailable(ffmpegBinary)) console.warn(`FFmpeg not found at '${ffmpegBinary}'. Install it and ensure it is on PATH; worker will report ffmpeg=false.`);
+if (!ffprobeAvailable(ffprobeBinary)) console.warn(`FFprobe not found at '${ffprobeBinary}'. Install it and ensure it is on PATH; worker will report ffprobe=false.`);
 const logsDir=path.join(here,'logs');fs.mkdirSync(logsDir,{recursive:true});
 const logPath=path.join(logsDir,`${new Date().toISOString().slice(0,10)}.log`);
 let desiredStream=null,reconnectTimer=null,reconnectAttempts=0,online=false,pendingLogs=[],lastProgressAt=0,lastProgressReportAt=0,lastLeaseOkAt=0,leaseChecking=false;
