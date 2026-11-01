@@ -2,20 +2,48 @@ import fs from 'node:fs';
 import http from 'node:http';
 import https from 'node:https';
 import path from 'node:path';
-import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { FfmpegRunner, ffmpegAvailable } from './ffmpeg.mjs';
 import { ffprobeAvailable, validatePlaylist, normalizeMedia, persistentPlaylistCompatible, capturePreview, syncMediaItems, syncMediaItemsWithProgress } from './media.mjs';
 import { scanWatchFolders, storageStats } from './catalog.mjs';
+import { createMetricsSampler } from './metrics.mjs';
 
 const VERSION='0.14.0';
 const here=path.dirname(fileURLToPath(import.meta.url));
 const configPath=process.env.STREAM24_AGENT_CONFIG||path.join(here,'config.json');
 if(!fs.existsSync(configPath)){console.error(`Missing ${configPath}. Copy config.example.json to config.json and fill in the device token.`);process.exit(1);}
-const config=JSON.parse(fs.readFileSync(configPath,'utf8'));
-const api=String(config.serverUrl||'http://localhost:3000').replace(/\/$/,'');
-const apiUrl=new URL(api);const loopbackHosts=new Set(['localhost','127.0.0.1','::1']);if(apiUrl.protocol==='http:'&&!loopbackHosts.has(apiUrl.hostname)&&config.allowInsecureLan!==true){console.error('Refusing insecure remote control connection over HTTP. Use HTTPS or set allowInsecureLan=true explicitly for a trusted LAN.');process.exit(1);}if(apiUrl.protocol==='http:'&&!loopbackHosts.has(apiUrl.hostname)&&config.allowInsecureLan===true)console.warn('WARNING: worker token and stream credentials will travel over plaintext HTTP on this LAN connection.');
-const token=config.agentToken,ffmpegBinary=config.ffmpegPath||'ffmpeg',ffprobeBinary=config.ffprobePath||'ffprobe';
+let config;
+try {
+  config=JSON.parse(fs.readFileSync(configPath,'utf8').replace(/^\uFEFF/,''));
+} catch (err) {
+  console.error(`Invalid worker config at ${configPath}: ${err.message}`);
+  process.exit(1);
+}
+if (!config || typeof config !== 'object' || Array.isArray(config)) {
+  console.error(`Invalid worker config at ${configPath}: expected a JSON object.`);
+  process.exit(1);
+}
+const token=String(config.agentToken||'').trim();
+if (!token || token==='PASTE_WORKER_TOKEN_HERE') {
+  console.error('Worker token is missing. Create a worker in the dashboard and paste its token into apps/agent/config.json.');
+  process.exit(1);
+}
+const api=String(config.serverUrl||'http://localhost:3000').trim().replace(/\/$/,'');
+let apiUrl;
+try { apiUrl=new URL(api); } catch { console.error(`Invalid serverUrl in ${configPath}: ${api}`); process.exit(1); }
+if (!['http:','https:'].includes(apiUrl.protocol)) {
+  console.error('serverUrl must use http:// or https://.');
+  process.exit(1);
+}
+const loopbackHosts=new Set(['localhost','127.0.0.1','::1']);
+if(apiUrl.protocol==='http:'&&!loopbackHosts.has(apiUrl.hostname)&&config.allowInsecureLan!==true){
+  console.error('Refusing insecure remote control connection over HTTP. Use HTTPS or set allowInsecureLan=true explicitly for a trusted LAN.');
+  process.exit(1);
+}
+if(apiUrl.protocol==='http:'&&!loopbackHosts.has(apiUrl.hostname)&&config.allowInsecureLan===true)console.warn('WARNING: worker token and stream credentials will travel over plaintext HTTP on this LAN connection.');
+const ffmpegBinary=String(config.ffmpegPath||'ffmpeg').trim(),ffprobeBinary=String(config.ffprobePath||'ffprobe').trim();
+if (!ffmpegAvailable(ffmpegBinary)) console.warn(`FFmpeg not found at '${ffmpegBinary}'. Install it and ensure it is on PATH; worker will report ffmpeg=false.`);
+if (!ffprobeAvailable(ffprobeBinary)) console.warn(`FFprobe not found at '${ffprobeBinary}'. Install it and ensure it is on PATH; worker will report ffprobe=false.`);
 const logsDir=path.join(here,'logs');fs.mkdirSync(logsDir,{recursive:true});
 const logPath=path.join(logsDir,`${new Date().toISOString().slice(0,10)}.log`);
 let desiredStream=null,reconnectTimer=null,reconnectAttempts=0,online=false,pendingLogs=[],lastProgressAt=0,lastProgressReportAt=0,lastLeaseOkAt=0,leaseChecking=false;
@@ -42,6 +70,7 @@ async function assertPayloadLease(payload={}){if(!payload.leaseId)return;const r
 
 function scheduleRestart(reason){if(!desiredStream||config.autoRestart===false)return;clearTimeout(reconnectTimer);reconnectAttempts+=1;const base=Number(config.restartDelayMs||5000),delay=Math.min(60000,base*Math.max(1,Math.min(reconnectAttempts,8)));log(`Restart scheduled in ${delay}ms (${reason}; attempt ${reconnectAttempts}).`,'WARN');reconnectTimer=setTimeout(()=>{if(!desiredStream||runner.running)return;try{runner.start(desiredStream);log(`Restarted stream ${desiredStream.streamId}`);}catch(err){log(`Restart failed: ${err.message}`,'ERROR');scheduleRestart(err.message);}},delay);}
 
+const systemMetrics=createMetricsSampler();
 const runner=new FfmpegRunner({binary:ffmpegBinary,onLog:line=>line&&log(line,'FFMPEG'),onProgress:p=>{lastProgressAt=Date.now();if(Date.now()-lastProgressReportAt>5000){lastProgressReportAt=Date.now();reportRuntime({state:'STREAMING',progress:{fps:p.fps||0,speed:p.speed||null,outTimeMs:p.outTimeMs||0,lastProgressAt:new Date(lastProgressAt).toISOString()}});}},onItem:({streamId,index,inputPath})=>{reconnectAttempts=0;log(`Streaming playlist item ${index+1}: ${inputPath}`);reportRuntime({streamId,currentIndex:index,currentItem:inputPath,state:'STREAMING'});},onExit:({streamId,code,signal,expected,playlistEnded})=>{log(`FFmpeg exited for ${streamId||'unknown'} code=${code} signal=${signal||'none'} expected=${expected}`,expected?'INFO':'WARN');if(!expected&&desiredStream&&desiredStream.streamId===streamId){reportRuntime({streamId,state:playlistEnded?'ENDED':'RECONNECTING',exitCode:code});if(playlistEnded&&desiredStream.loop===false){log(`Play-once stream ${streamId} reached the end of its playlist.`);desiredStream=null;return;}scheduleRestart(playlistEnded?'playlist ended':`ffmpeg exit ${code}`);}}});
 
 function preflightPayload(payload){if(!ffmpegAvailable(ffmpegBinary))throw new Error(`FFmpeg not found at '${ffmpegBinary}'.`);if(!ffprobeAvailable(ffprobeBinary))throw new Error(`FFprobe not found at '${ffprobeBinary}'.`);const playlist=Array.isArray(payload.playlist)&&payload.playlist.length?payload.playlist:[payload.inputPath].filter(Boolean);const media=validatePlaylist(playlist,ffprobeBinary);const branding=payload.branding||{},overlayEnabled=Boolean(branding.enabled&&branding.imagePath);if(branding.enabled&&!branding.imagePath)throw new Error('Branding is enabled but no logo image path is configured.');if(overlayEnabled&&!fs.existsSync(branding.imagePath))throw new Error(`Branding image not found: ${branding.imagePath}`);if(payload.mode==='copy'&&!overlayEnabled){const bad=media.find(m=>!m.youtubeCopyCompatible);if(bad)throw new Error(`Stream-copy mode is not compatible with ${bad.path}. Normalize it or use Transcode mode.`);}return {media,persistentCompatible:persistentPlaylistCompatible(media)};}
@@ -76,7 +105,7 @@ async function scanWatchFoldersAndReport(){
   catch(err){log(`Watch-folder scan failed: ${err.message}`,'WARN');}finally{watchScanning=false;}
 }
 
-async function heartbeat(){try{const total=os.totalmem(),free=os.freemem();const metrics={hostname:os.hostname(),platform:os.platform(),arch:os.arch(),uptimeSeconds:Math.round(os.uptime()),memoryTotalBytes:total,memoryFreeBytes:free,memoryUsedPercent:total?Math.round(((total-free)/total)*100):0,loadAverage:os.loadavg().map(v=>Number(v.toFixed(2)))};await request('/api/agent/heartbeat',{method:'POST',body:JSON.stringify({status:runner.running?'STREAMING':'ONLINE',version:VERSION,ffmpeg:ffmpegAvailable(ffmpegBinary),ffprobe:ffprobeAvailable(ffprobeBinary),currentStreamId:runner.streamId,currentIndex:runner.currentIndex,currentLeaseId:desiredStream?.leaseId||null,assignmentEpoch:Number(desiredStream?.assignmentEpoch||0),metrics,watchFolders:Array.isArray(config.watchFolders)?config.watchFolders:[],lastCatalogAt:lastCatalogAt?new Date(lastCatalogAt).toISOString():null})});if(!online)log('Control server connection restored.');online=true;}catch(err){if(online)log(`Control server connection lost: ${err.message}`,'WARN');online=false;}}
+async function heartbeat(){try{const metrics=systemMetrics.sample();await request('/api/agent/heartbeat',{method:'POST',body:JSON.stringify({status:runner.running?'STREAMING':'ONLINE',version:VERSION,ffmpeg:ffmpegAvailable(ffmpegBinary),ffprobe:ffprobeAvailable(ffprobeBinary),currentStreamId:runner.streamId,currentIndex:runner.currentIndex,currentLeaseId:desiredStream?.leaseId||null,assignmentEpoch:Number(desiredStream?.assignmentEpoch||0),metrics,watchFolders:Array.isArray(config.watchFolders)?config.watchFolders:[],lastCatalogAt:lastCatalogAt?new Date(lastCatalogAt).toISOString():null})});if(!online)log('Control server connection restored.');online=true;}catch(err){if(online)log(`Control server connection lost: ${err.message}`,'WARN');online=false;}}
 async function poll(){if(pollBusy)return;pollBusy=true;try{const {command}=await request('/api/agent/commands');if(command)await handle(command);}catch(err){if(online)log(`Poll failed: ${err.message}`,'WARN');}finally{pollBusy=false;}}
 async function recover(){if(config.recoverOnStart===false)return;try{const {streams}=await request('/api/agent/recovery');if(!runner.running&&streams?.length){const payload=streams[0];log(`Recovering desired stream ${payload.streamId} after agent start.`);await startStream(payload);}}catch(err){log(`Recovery check failed: ${err.message}`,'WARN');}}
 

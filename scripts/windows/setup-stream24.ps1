@@ -7,13 +7,14 @@ param(
   [switch]$EnableLanTls,
   [string]$CaCertPath='',
   [string[]]$WatchFolders=@("$env:USERPROFILE\Videos\Stream24"),
-  [switch]$InstallStartupTasks
+  [switch]$InstallStartupTasks,
+  [switch]$InstallFFmpeg
 )
 $ErrorActionPreference='Stop'
 Write-Host "Stream24 Phase 14 setup" -ForegroundColor Cyan
 if(-not (Get-Command node -ErrorAction SilentlyContinue)){throw 'Node.js 20+ is required. Install Node.js LTS first, then rerun this setup.'}
 $nodeVersion=[version]((node -p "process.versions.node") -replace '-.*$','')
-if($nodeVersion.Major -lt 20){throw "Node.js 20+ required; found $nodeVersion"}
+if($nodeVersion -lt [version]'20.19.0'){throw "Node.js 20.19+ required; found $nodeVersion"}
 $source=(Resolve-Path "$PSScriptRoot\..\..").Path
 if((Resolve-Path $source).Path -ne [IO.Path]::GetFullPath($InstallDir)){
   New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
@@ -50,7 +51,16 @@ if($Mode -in @('Worker','Both')){
   $cfg | ConvertTo-Json -Depth 5 | Set-Content -Encoding UTF8 'apps\agent\config.json'
   try { icacls (Join-Path $InstallDir 'apps\agent\config.json') /inheritance:r /grant:r "$env:USERNAME:(R,W)" | Out-Null } catch { Write-Warning "Could not tighten ACL on agent config: $($_.Exception.Message)" }
 }
-if(-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)){Write-Warning 'FFmpeg is not on PATH. Run scripts\windows\install-ffmpeg.ps1 before streaming.'}
+$ffmpeg = Get-Command ffmpeg -ErrorAction SilentlyContinue
+$ffprobe = Get-Command ffprobe -ErrorAction SilentlyContinue
+if($InstallFFmpeg -and (-not $ffmpeg -or -not $ffprobe)){
+  & "$InstallDir\scripts\windows\install-ffmpeg.ps1"
+  $ffmpeg = Get-Command ffmpeg -ErrorAction SilentlyContinue
+  $ffprobe = Get-Command ffprobe -ErrorAction SilentlyContinue
+}
+if(-not $ffmpeg -or -not $ffprobe){
+  Write-Warning 'FFmpeg and/or FFprobe are missing. Run npm run install:ffmpeg, then open a new PowerShell window and run npm run doctor.'
+}
 if($InstallStartupTasks){
   if($Mode -in @('Server','Both')){& "$InstallDir\scripts\windows\install-server-service.ps1" -InstallDir $InstallDir}
   if($Mode -in @('Worker','Both')){& "$InstallDir\scripts\windows\install-agent-service.ps1" -InstallDir $InstallDir}

@@ -12,7 +12,7 @@ export function securityHeaders({tls=false}={}){
     'x-frame-options':'DENY',
     'referrer-policy':'no-referrer',
     'permissions-policy':'camera=(), microphone=(), geolocation=()',
-    'content-security-policy':"default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+    'content-security-policy':"default-src 'self'; img-src 'self' data: https://*.razorpay.com; style-src 'self' 'unsafe-inline'; script-src 'self' https://checkout.razorpay.com; connect-src 'self' https://*.razorpay.com; frame-src https://*.razorpay.com; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
   };
   if(tls)h['strict-transport-security']='max-age=31536000; includeSubDomains';
   return h;

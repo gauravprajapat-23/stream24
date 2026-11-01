@@ -1,0 +1,45 @@
+services:
+  server:
+    build: .
+    image: stream24:cloud-vps
+    restart: unless-stopped
+    init: true
+    env_file:
+      - .env
+    environment:
+      PORT: "3000"
+      HOST: "0.0.0.0"
+      STREAM24_MEDIA_ROOT: /data/media
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - stream24-data:/app/data
+      - stream24-media:/data/media
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  worker:
+    image: stream24:cloud-vps
+    restart: unless-stopped
+    init: true
+    depends_on:
+      server:
+        condition: service_healthy
+    environment:
+      STREAM24_AGENT_CONFIG: /run/stream24/config.json
+      STREAM24_AGENT_TOKEN: ${STREAM24_AGENT_TOKEN:-}
+      STREAM24_SERVER_URL: http://server:3000
+      STREAM24_MEDIA_ROOT: /data/media
+    entrypoint: ["node", "/usr/local/bin/stream24-agent-entrypoint.mjs"]
+    volumes:
+      - stream24-media:/data/media
+      - stream24-worker-logs:/app/apps/agent/logs
+
+volumes:
+  stream24-data:
+  stream24-media:
+  stream24-worker-logs:
