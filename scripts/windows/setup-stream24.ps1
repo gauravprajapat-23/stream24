@@ -14,7 +14,7 @@ $ErrorActionPreference='Stop'
 Write-Host "Stream24 Phase 14 setup" -ForegroundColor Cyan
 if(-not (Get-Command node -ErrorAction SilentlyContinue)){throw 'Node.js 20+ is required. Install Node.js LTS first, then rerun this setup.'}
 $nodeVersion=[version]((node -p "process.versions.node") -replace '-.*$','')
-if($nodeVersion.Major -lt 20){throw "Node.js 20+ required; found $nodeVersion"}
+if($nodeVersion -lt [version]'20.19.0'){throw "Node.js 20.19+ required; found $nodeVersion"}
 $source=(Resolve-Path "$PSScriptRoot\..\..").Path
 if((Resolve-Path $source).Path -ne [IO.Path]::GetFullPath($InstallDir)){
   New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
