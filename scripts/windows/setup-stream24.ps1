@@ -7,7 +7,8 @@ param(
   [switch]$EnableLanTls,
   [string]$CaCertPath='',
   [string[]]$WatchFolders=@("$env:USERPROFILE\Videos\Stream24"),
-  [switch]$InstallStartupTasks
+  [switch]$InstallStartupTasks,
+  [switch]$InstallFFmpeg
 )
 $ErrorActionPreference='Stop'
 Write-Host "Stream24 Phase 14 setup" -ForegroundColor Cyan
@@ -50,7 +51,16 @@ if($Mode -in @('Worker','Both')){
   $cfg | ConvertTo-Json -Depth 5 | Set-Content -Encoding UTF8 'apps\agent\config.json'
   try { icacls (Join-Path $InstallDir 'apps\agent\config.json') /inheritance:r /grant:r "$env:USERNAME:(R,W)" | Out-Null } catch { Write-Warning "Could not tighten ACL on agent config: $($_.Exception.Message)" }
 }
-if(-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)){Write-Warning 'FFmpeg is not on PATH. Run scripts\windows\install-ffmpeg.ps1 before streaming.'}
+$ffmpeg = Get-Command ffmpeg -ErrorAction SilentlyContinue
+$ffprobe = Get-Command ffprobe -ErrorAction SilentlyContinue
+if($InstallFFmpeg -and (-not $ffmpeg -or -not $ffprobe)){
+  & "$InstallDir\scripts\windows\install-ffmpeg.ps1"
+  $ffmpeg = Get-Command ffmpeg -ErrorAction SilentlyContinue
+  $ffprobe = Get-Command ffprobe -ErrorAction SilentlyContinue
+}
+if(-not $ffmpeg -or -not $ffprobe){
+  Write-Warning 'FFmpeg and/or FFprobe are missing. Run npm run install:ffmpeg, then open a new PowerShell window and run npm run doctor.'
+}
 if($InstallStartupTasks){
   if($Mode -in @('Server','Both')){& "$InstallDir\scripts\windows\install-server-service.ps1" -InstallDir $InstallDir}
   if($Mode -in @('Worker','Both')){& "$InstallDir\scripts\windows\install-agent-service.ps1" -InstallDir $InstallDir}
